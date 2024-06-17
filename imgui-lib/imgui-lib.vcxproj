@@ -71,20 +71,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
-    <IncludePath>$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\imgui;$(SolutionDir)submodules\imgui\backends;$(SolutionDir)submodules\SDL\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\imgui;$(ProjectDir)..\submodules\imgui\backends;$(ProjectDir)..\submodules\SDL\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\imgui;$(SolutionDir)submodules\imgui\backends;$(SolutionDir)submodules\SDL\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\imgui;$(ProjectDir)..\submodules\imgui\backends;$(ProjectDir)..\submodules\SDL\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\imgui;$(SolutionDir)submodules\imgui\backends;$(SolutionDir)submodules\SDL\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\imgui;$(ProjectDir)..\submodules\imgui\backends;$(ProjectDir)..\submodules\SDL\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
     <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\imgui;$(SolutionDir)submodules\imgui\backends;$(SolutionDir)submodules\SDL\include;$(IncludePath)</IncludePath>
+    <IncludePath>$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\imgui;$(ProjectDir)..\submodules\imgui\backends;$(ProjectDir)..\submodules\SDL\include;$(IncludePath)</IncludePath>
     <LibraryPath>$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -93,7 +93,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\imgui;$(SolutionDir)submodules\imgui\backends;$(SolutionDir)submodules\SDL\include;$(IncludePath)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\imgui;$(ProjectDir)..\submodules\imgui\backends;$(ProjectDir)..\submodules\SDL\include;$(IncludePath)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -112,7 +112,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\imgui;$(SolutionDir)submodules\imgui\backends;$(SolutionDir)submodules\SDL\include;$(IncludePath)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\imgui;$(ProjectDir)..\submodules\imgui\backends;$(ProjectDir)..\submodules\SDL\include;$(IncludePath)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -131,7 +131,7 @@
       <SDLCheck>true</SDLCheck>
       <PreprocessorDefinitions>_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
-      <AdditionalIncludeDirectories>$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\imgui;$(SolutionDir)submodules\imgui\backends;$(SolutionDir)submodules\SDL\include;$(IncludePath)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\imgui;$(ProjectDir)..\submodules\imgui\backends;$(ProjectDir)..\submodules\SDL\include;$(IncludePath)</AdditionalIncludeDirectories>
       <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
@@ -151,7 +151,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <AdditionalIncludeDirectories>$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\imgui;$(SolutionDir)submodules\imgui\backends;$(SolutionDir)submodules\SDL\include;$(IncludePath)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\imgui;$(ProjectDir)..\submodules\imgui\backends;$(ProjectDir)..\submodules\SDL\include;$(IncludePath)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
