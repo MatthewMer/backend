@@ -179,20 +179,17 @@
     </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="AudioMgr.h" />
     <ClInclude Include="AudioOpenAL.h" />
     <ClInclude Include="AudioSDL.h" />
     <ClInclude Include="audio_helpers.h" />
     <ClInclude Include="ControlMgr.h" />
     <ClInclude Include="data_io.h" />
-    <ClInclude Include="defs.h" />
     <ClInclude Include="FileMapper.h" />
     <ClInclude Include="framework.h" />
     <ClInclude Include="GraphicsMgr.h" />
     <ClInclude Include="GraphicsVulkan.h" />
     <ClInclude Include="HardwareMgr.h" />
     <ClInclude Include="HardwareTypes.h" />
-    <ClInclude Include="helper_functions.h" />
     <ClInclude Include="NetworkMgr.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>

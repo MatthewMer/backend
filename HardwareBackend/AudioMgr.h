@@ -9,6 +9,7 @@
 #include <map>
 
 namespace Backend {
+	namespace Audio {
 #define SOUND_MONO                  1
 #define SOUND_STEREO                2
 #define SOUND_5_1                   6
@@ -17,40 +18,39 @@ namespace Backend {
 #define M_SPEED_OF_SOUND            343.2f  // m/s
 #define M_DISTANCE_EARS             0.2f    // m
 
-	const std::map<const char*, std::pair<int, int>> SAMPLING_RATES = {
-		{"22050 Hz", {22050, 512}},
-		{"44100 Hz", {44100, 512}},
-		{"48000 Hz", {48000, 512}},
-		{"88200 Hz", {88200, 1024}},
-		{"96000 Hz", {96000, 1024}}
-	};
+		const std::map<const char*, std::pair<int, int>> SAMPLING_RATES = {
+			{"22050 Hz", {22050, 512}},
+			{"44100 Hz", {44100, 512}},
+			{"48000 Hz", {48000, 512}},
+			{"88200 Hz", {88200, 1024}},
+			{"96000 Hz", {96000, 1024}}
+		};
 
-	const float SOUND_7_1_ANGLES[8] = {
-		337.5f * (float)(M_PI / 180.f),               // front-left
-		22.5f * (float)(M_PI / 180.f),                // front-right
-		.0f * (float)(M_PI / 180.f),                  // centre
-		.0f * (float)(M_PI / 180.f),                  // low frequency (not needed)
-		220.f * (float)(M_PI / 180.f),                // rear-left
-		140.f * (float)(M_PI / 180.f),                // rear-right
-		275.f * (float)(M_PI / 180.f),                // centre-left
-		85.f * (float)(M_PI / 180.f)                  // centre-right
-	};
+		const float SOUND_7_1_ANGLES[8] = {
+			337.5f * (float)(M_PI / 180.f),               // front-left
+			22.5f * (float)(M_PI / 180.f),                // front-right
+			.0f * (float)(M_PI / 180.f),                  // centre
+			.0f * (float)(M_PI / 180.f),                  // low frequency (not needed)
+			220.f * (float)(M_PI / 180.f),                // rear-left
+			140.f * (float)(M_PI / 180.f),                // rear-right
+			275.f * (float)(M_PI / 180.f),                // centre-left
+			85.f * (float)(M_PI / 180.f)                  // centre-right
+		};
 
-	const float SOUND_5_1_ANGLES[6] = {
-		337.5f * (float)(M_PI / 180.f),               // front-left
-		22.5f * (float)(M_PI / 180.f),                // front-right
-		.0f * (float)(M_PI / 180.f),                  // centre
-		.0f * (float)(M_PI / 180.f),                  // low frequency (not needed)
-		220.f * (float)(M_PI / 180.f),                // rear-left
-		140.f * (float)(M_PI / 180.f)                 // rear-right
-	};
+		const float SOUND_5_1_ANGLES[6] = {
+			337.5f * (float)(M_PI / 180.f),               // front-left
+			22.5f * (float)(M_PI / 180.f),                // front-right
+			.0f * (float)(M_PI / 180.f),                  // centre
+			.0f * (float)(M_PI / 180.f),                  // low frequency (not needed)
+			220.f * (float)(M_PI / 180.f),                // rear-left
+			140.f * (float)(M_PI / 180.f)                 // rear-right
+		};
 
-	const float SOUND_STEREO_ANGLES[2] = {
-		270.f * (float)(M_PI / 180.f),                // left
-		90.f * (float)(M_PI / 180.f)                  // right
-	};
+		const float SOUND_STEREO_ANGLES[2] = {
+			270.f * (float)(M_PI / 180.f),                // left
+			90.f * (float)(M_PI / 180.f)                  // right
+		};
 
-	namespace Audio {
 		struct audio_samples {
 			std::vector<float> buffer;
 			int buffer_size = 0;
