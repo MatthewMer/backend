@@ -1,8 +1,6 @@
 #pragma once
 
 #include <string>
-#include <SDL.h>
-#include <imgui_impl_sdl2.h>
 #include <atomic>
 
 #include "HardwareTypes.h"

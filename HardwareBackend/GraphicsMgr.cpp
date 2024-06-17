@@ -2,7 +2,6 @@
 #include "framework.h"
 
 #include "GraphicsMgr.h"
-
 #include "GraphicsVulkan.h"
 
 namespace Backend {
