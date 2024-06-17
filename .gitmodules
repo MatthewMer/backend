@@ -4,3 +4,21 @@
 [submodule "submodules/SDL"]
 	path = submodules/SDL
 	url = https://github.com/libsdl-org/SDL.git
+[submodule "submodules/asio"]
+	path = submodules/asio
+	url = https://github.com/chriskohlhoff/asio.git
+[submodule "submodules/openal-soft"]
+	path = submodules/openal-soft
+	url = https://github.com/kcat/openal-soft.git
+[submodule "submodules/SDL_GameControllerDB"]
+	path = submodules/SDL_GameControllerDB
+	url = https://github.com/mdqinc/SDL_GameControllerDB.git
+[submodule "submodules/shaderc"]
+	path = submodules/shaderc
+	url = https://github.com/google/shaderc.git
+[submodule "submodules/Vulkan-Headers"]
+	path = submodules/Vulkan-Headers
+	url = https://github.com/KhronosGroup/Vulkan-Headers.git
+[submodule "submodules/glm"]
+	path = submodules/glm
+	url = https://github.com/g-truc/glm.git
