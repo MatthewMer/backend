@@ -4,20 +4,24 @@
 #include "framework.h"
 
 #include <chrono>
-using namespace std::chrono;
+#include <mutex>
 
 #include "defs.h"
+#include "logger.h"
+
+#ifndef HWMGR_INCLUDE
+#define HWMGR_INCLUDE
+#include "../submodules/SDL/include/SDL.h"
+#include "../submodules/imgui/imgui.h"
+#include "../submodules/imgui/backends/imgui_impl_sdl2.h"
 #include "GraphicsMgr.h"
 #include "AudioMgr.h"
-#include <imgui.h>
-#include <SDL.h>
-#include <mutex>
-#include "logger.h"
 #include "HardwareTypes.h"
 #include "ControlMgr.h"
 #include "NetworkMgr.h"
 #include "data_io.h"
 #include "FileMapper.h"
+#endif
 
 #define HWMGR_ERR_ALREADY_RUNNING		0x00000001
 
@@ -96,8 +100,8 @@ namespace Backend {
 		static std::mutex mutTimeDelta;
 		static std::condition_variable  notifyTimeDelta;
 		static std::chrono::milliseconds timePerFrame;
-		static steady_clock::time_point timePointCur;
-		static steady_clock::time_point timePointPrev;
+		static std::chrono::steady_clock::time_point timePointCur;
+		static std::chrono::steady_clock::time_point timePointPrev;
 
 		// control
 		static u32 currentMouseMove;

@@ -7,8 +7,11 @@
 #include <map>
 #include <array>
 
-#include "SDL.h"
-#include "imgui_impl_sdl2.h"
+#ifndef HWMGR_INCLUDE
+#define HWMGR_INCLUDE
+#include "../submodules/SDL/include/SDL.h"
+#include "../submodules/imgui/backends/imgui_impl_sdl2.h"
+#endif
 
 namespace Backend {
 	namespace Control {

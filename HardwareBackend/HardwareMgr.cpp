@@ -3,6 +3,8 @@
 
 #include "HardwareMgr.h"
 
+using namespace std::chrono;
+
 namespace Backend {
 	HardwareMgr* HardwareMgr::instance = nullptr;
 	u32 HardwareMgr::errors = 0x00000000;

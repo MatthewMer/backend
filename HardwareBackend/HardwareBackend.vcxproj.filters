@@ -54,6 +54,9 @@
     <ClInclude Include="NetworkMgr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="AudioMgr.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="pch.cpp">
