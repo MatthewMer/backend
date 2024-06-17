@@ -1147,7 +1147,7 @@ namespace Backend {
 					return false;
 				}
 				{
-					ImGui_ImplVulkan_CreateFontsTexture();
+					ImGui_ImplVulkan_CreateFontsTexture(commandBuffers[0]);
 				}
 				if (vkEndCommandBuffer(commandBuffers[0]) != VK_SUCCESS) {
 					LOG_ERROR("[vulkan] imgui end command buffer");
@@ -1164,6 +1164,7 @@ namespace Backend {
 				}
 
 				WaitIdle();
+				ImGui_ImplVulkan_DestroyFontUploadObjects();
 			}
 
 			LOG_INFO("[vulkan] imgui initialized");
