@@ -200,7 +200,7 @@ namespace Backend {
 				0x16, 0x00, 0x00, 0x00, 0xfd, 0x00, 0x01, 0x00, 0x38, 0x00, 0x01, 0x00
 		};
 
-		bool compile_shader(vector<char>& _byte_code, const string& _shader_source_file, const shaderc_compiler_t& _compiler, const shaderc_compile_options_t& _options);
+		bool compile_shader(vector<char>& _byte_code, const string& _shader_source_file, const shaderc_compiler_t& _compiler, const shaderc_compile_options_t& _options, const std::string& _shader_cache);
 		#ifdef VK_DEBUG_CALLBACK
 		VkBool32 VKAPI_CALL debug_report_callback(VkDebugUtilsMessageSeverityFlagBitsEXT _severity, VkDebugUtilsMessageTypeFlagsEXT messageTypes, const VkDebugUtilsMessengerCallbackDataEXT* _callback_data, void* userData);
 		#endif
@@ -1735,11 +1735,11 @@ namespace Backend {
 		void GraphicsVulkan::CompileNextShader() {
 			bool compiled = true;
 			vector<char> vertex_byte_code;
-			if (!compile_shader(vertex_byte_code, shaderSourceFiles[shadersCompiled].first, compiler, options)) {
+			if (!compile_shader(vertex_byte_code, shaderSourceFiles[shadersCompiled].first, compiler, options, shaderFolder + SHADER_CACHE)) {
 				compiled = false;
 			}
 			vector<char> fragment_byte_code;
-			if (!compile_shader(fragment_byte_code, shaderSourceFiles[shadersCompiled].second, compiler, options)) {
+			if (!compile_shader(fragment_byte_code, shaderSourceFiles[shadersCompiled].second, compiler, options, shaderFolder + SHADER_CACHE)) {
 				compiled = false;
 			}
 
