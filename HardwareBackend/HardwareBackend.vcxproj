@@ -72,19 +72,19 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(IncludePath);$(ProjectDir)include\;$(ProjectDir)..\submodules\SDL\include;$(ProjectDir)..\submodules\imgui\;$(ProjectDir)..\submodules\imgui\backends\;$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\shaderc\libshaderc\include;$(ProjectDir)..\submodules\glm\glm;$(ProjectDir)..\submodules\openal-soft\include\AL;$(ProjectDir)..\submodules\asio\asio\include\</IncludePath>
-    <LibraryPath>$(VULKAN_SDK)\Lib32;$(ProjectDir)..\HardwareBackend\lib32;$(ProjectDir)..\$(Platform)\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(VULKAN_SDK)\Lib32;$(ProjectDir)..\HardwareBackend\lib32;$(ProjectDir)..\$(Platform)\Release;$(LibraryPath);$(SolutionDir)$(Platform)\Debug\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)include\;$(ProjectDir)..\submodules\SDL\include;$(ProjectDir)..\submodules\imgui\;$(ProjectDir)..\submodules\imgui\backends\;$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\shaderc\libshaderc\include;$(ProjectDir)..\submodules\glm\glm;$(ProjectDir)..\submodules\openal-soft\include\AL;$(ProjectDir)..\submodules\asio\asio\include\</IncludePath>
-    <LibraryPath>$(VULKAN_SDK)\Lib\;$(ProjectDir)..\HardwareBackend\lib\;$(ProjectDir)..\$(Platform)\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(VULKAN_SDK)\Lib\;$(ProjectDir)..\HardwareBackend\lib\;$(ProjectDir)..\$(Platform)\Release;$(LibraryPath);$(SolutionDir)$(Platform)\Debug\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)include\;$(ProjectDir)..\submodules\SDL\include;$(ProjectDir)..\submodules\imgui\;$(ProjectDir)..\submodules\imgui\backends\;$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\shaderc\libshaderc\include;$(ProjectDir)..\submodules\glm\glm;$(ProjectDir)..\submodules\openal-soft\include\AL;$(ProjectDir)..\submodules\asio\asio\include\</IncludePath>
-    <LibraryPath>$(VULKAN_SDK)\Lib32;$(ProjectDir)..\HardwareBackend\lib32;$(ProjectDir)..\$(Platform)\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(VULKAN_SDK)\Lib32;$(ProjectDir)..\HardwareBackend\lib32;$(ProjectDir)..\$(Platform)\Release;$(LibraryPath);$(SolutionDir)$(Platform)\Release\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)include\;$(ProjectDir)..\submodules\SDL\include;$(ProjectDir)..\submodules\imgui\;$(ProjectDir)..\submodules\imgui\backends\;$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\shaderc\libshaderc\include;$(ProjectDir)..\submodules\glm\glm;$(ProjectDir)..\submodules\openal-soft\include\AL;$(ProjectDir)..\submodules\asio\asio\include\</IncludePath>
-    <LibraryPath>$(VULKAN_SDK)\Lib\;$(ProjectDir)..\HardwareBackend\lib\;$(ProjectDir)..\$(Platform)\Release;$(LibraryPath)</LibraryPath>
+    <LibraryPath>$(VULKAN_SDK)\Lib\;$(ProjectDir)..\HardwareBackend\lib\;$(ProjectDir)..\$(Platform)\Release;$(LibraryPath);$(SolutionDir)$(Platform)\Release\</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -103,7 +103,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib;$(SolutionDir)$(Platform)\Debug\</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;shaderc_combined.lib;OpenAL32.lib;SDL2.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
@@ -128,7 +128,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib;$(SolutionDir)$(Platform)\Release\</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;shaderc_combined.lib;OpenAL32.lib;SDL2.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
@@ -149,7 +149,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib;$(SolutionDir)$(Platform)\Debug\</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;shaderc_combined.lib;OpenAL32.lib;SDL2.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
@@ -174,7 +174,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
     <Lib>
-      <AdditionalLibraryDirectories>$(ProjectDir)lib</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib;$(SolutionDir)$(Platform)\Release\</AdditionalLibraryDirectories>
       <AdditionalDependencies>vulkan-1.lib;shaderc_combined.lib;OpenAL32.lib;SDL2.lib</AdditionalDependencies>
     </Lib>
   </ItemDefinitionGroup>
