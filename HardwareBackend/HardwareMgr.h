@@ -11,6 +11,7 @@
 
 #ifndef HWMGR_INCLUDE
 #define HWMGR_INCLUDE
+#define SDL_MAIN_HANDLED
 #include "../submodules/SDL/include/SDL.h"
 #include "../submodules/imgui/imgui.h"
 #include "../submodules/imgui/backends/imgui_impl_sdl2.h"
