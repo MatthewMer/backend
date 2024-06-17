@@ -5,6 +5,9 @@
 
 #include "HardwareTypes.h"
 
+#include <SDL.h>
+#include <imgui_impl_sdl2.h>
+
 namespace Backend {
 	namespace Graphics {
 #ifndef GRAPHICS_DEBUG
