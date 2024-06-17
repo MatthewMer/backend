@@ -1,4 +1,7 @@
-﻿#include "audio_helpers.h"
+﻿#include "pch.h"
+#include "framework.h"
+
+#include "audio_helpers.h"
 
 namespace Backend {
 	namespace Audio {

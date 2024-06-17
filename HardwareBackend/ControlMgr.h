@@ -1,6 +1,6 @@
 #pragma once
 
-#include "HardwareStructs.h"
+#include "HardwareTypes.h"
 
 #include <queue>
 #include <tuple>

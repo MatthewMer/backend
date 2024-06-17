@@ -1,7 +1,6 @@
 #pragma once
 
-#include "HardwareStructs.h"
-#include "HardwareStructs.h"
+#include "HardwareTypes.h"
 
 #ifdef _WIN32
 #ifndef _WIN32_WINNT

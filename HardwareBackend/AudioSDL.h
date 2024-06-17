@@ -4,6 +4,7 @@
 #include "logger.h"
 
 #include "AudioMgr.h"
+#include "SDL_audio.h"
 
 namespace Backend {
 	namespace Audio {

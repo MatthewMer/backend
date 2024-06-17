@@ -51,13 +51,16 @@
     <ClInclude Include="HardwareMgr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="HardwareStructs.h">
+    <ClInclude Include="HardwareTypes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="NetworkMgr.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="defs.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="helper_functions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -96,6 +99,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="NetworkMgr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="helper_functions.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

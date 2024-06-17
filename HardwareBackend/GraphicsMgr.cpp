@@ -1,3 +1,6 @@
+#include "pch.h"
+#include "framework.h"
+
 #include "GraphicsMgr.h"
 
 #include "GraphicsVulkan.h"
@@ -6,12 +9,12 @@ namespace Backend {
 	namespace Graphics {
 		GraphicsMgr* GraphicsMgr::instance = nullptr;
 
-		GraphicsMgr* GraphicsMgr::getInstance(SDL_Window** _window) {
+		GraphicsMgr* GraphicsMgr::getInstance(SDL_Window** _window, const graphics_settings& _settings) {
 			if (instance != nullptr) {
 				instance->resetInstance();
 			}
 
-			instance = new GraphicsVulkan(_window);
+			instance = new GraphicsVulkan(_window, _settings);
 			return instance;
 		}
 

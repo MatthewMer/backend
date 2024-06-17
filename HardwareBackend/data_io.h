@@ -5,14 +5,10 @@
 */
 
 #include <vector>
-#include "BaseCartridge.h"
+#include <string>
 
 namespace Backend {
 	namespace FileIO {
-		bool read_games_from_config(std::vector<Emulation::BaseCartridge*>& _games);
-		bool write_games_to_config(const std::vector<Emulation::BaseCartridge*>& _games, const bool& _rewrite);
-		bool delete_games_from_config(std::vector<Emulation::BaseCartridge*>& _games);
-
 		bool write_to_debug_log(const std::string& _output, const std::string& _file_path, const bool& _rewrite);
 
 		bool read_data(std::vector<std::string>& _input, const std::string& _file_path);
@@ -27,12 +23,5 @@ namespace Backend {
 
 		std::string get_current_path();
 		void get_files_in_path(std::vector<std::string>& _input, const std::string& _path);
-
-		void check_and_create_config_folders();
-		void check_and_create_config_files();
-		void check_and_create_log_folders();
-		void check_and_create_shader_folders();
-		void check_and_create_save_folders();
-		void check_and_create_rom_folder();
 	}
 }

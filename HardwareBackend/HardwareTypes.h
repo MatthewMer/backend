@@ -39,6 +39,17 @@ namespace Backend {
 		bool fpsUnlimited = false;
 		bool tripleBuffering = false;
 		bool presentModeFifo = false;
+		u32 win_width = 0;
+		u32 win_height = 0;
+		u32 win_width_min = 0;
+		u32 win_height_min = 0;
+		std::string app_title = "";
+		std::string icon = "";
+		u32 v_major = 0;
+		u32 v_minor = 0;
+		u32 v_patch = 0;
+		std::string font = "";
+		std::string shader_folder = "";
 	};
 
 	struct audio_settings {
@@ -52,6 +63,8 @@ namespace Backend {
 
 	struct control_settings {
 		bool mouse_always_visible = false;
+		std::string controller_db = "";
+		std::string bmp_custom_cursor = "";
 	};
 
 	struct network_settings {

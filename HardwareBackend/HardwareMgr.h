@@ -1,5 +1,8 @@
 #pragma once
 
+#include "pch.h"
+#include "framework.h"
+
 #include <chrono>
 using namespace std::chrono;
 
@@ -10,7 +13,7 @@ using namespace std::chrono;
 #include <SDL.h>
 #include <mutex>
 #include "logger.h"
-#include "HardwareStructs.h"
+#include "HardwareTypes.h"
 #include "ControlMgr.h"
 #include "NetworkMgr.h"
 #include "data_io.h"

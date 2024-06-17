@@ -1,13 +1,17 @@
+#include "pch.h"
+#include "framework.h"
+
 #include "AudioSDL.h"
 #include "format"
 #include "AudioMgr.h"
-#include "BaseAPU.h"
 #include "logger.h"
 #include "audio_helpers.h"
+#include "SDL_audio.h"
 
 #define _USE_MATH_DEFINES
 #include <cmath>
 #include <glm.hpp>
+#include <format>
 
 using namespace std;
 
@@ -34,7 +38,7 @@ namespace Backend {
 			}
 
 			Uint16 buff_size = 512;
-			for (const auto& [key, val] : Config::SAMPLING_RATES) {
+			for (const auto& [key, val] : SAMPLING_RATES) {
 				if (val.first == _audio_settings.sampling_rate) {
 					buff_size = (Uint16)val.second;
 				}
@@ -79,7 +83,7 @@ namespace Backend {
 			audioInfo.device = (void*)&device;
 
 			SDL_PauseAudioDevice(device, 0);
-			LOG_INFO("[SDL] ", name, " set: ", format("{:d} channels @ {:d}Hz", audioInfo.channels, audioInfo.sampling_rate));
+			LOG_INFO("[SDL] ", name, " set: ", std::format("{:d} channels @ {:d}Hz", audioInfo.channels, audioInfo.sampling_rate));
 
 			if (_reinit && _reinit_backend) {
 				InitAudioBackend(virtAudioInfo);
@@ -354,35 +358,35 @@ namespace Backend {
 
 			// TODO: low frequency missing, probably use a low pass filter on all samples and combine and increase amplitude for output on low frequency channel
 			void samples_7_1_surround(float* _buffer, const float& _sample, const float& _angle, const float& _lfe) {
-				_buffer[0] += calc_sample(_sample, _angle, Config::SOUND_7_1_ANGLES[0]);	// front-left
-				_buffer[1] += calc_sample(_sample, _angle, Config::SOUND_7_1_ANGLES[1]);	// front-right
-				_buffer[2] += calc_sample(_sample, _angle, Config::SOUND_7_1_ANGLES[2]);	// centre
-				_buffer[4] += calc_sample(_sample, _angle, Config::SOUND_7_1_ANGLES[4]);	// rear-left
-				_buffer[5] += calc_sample(_sample, _angle, Config::SOUND_7_1_ANGLES[5]);	// rear-right
-				_buffer[6] += calc_sample(_sample, _angle, Config::SOUND_7_1_ANGLES[6]);	// centre-left
-				_buffer[7] += calc_sample(_sample, _angle, Config::SOUND_7_1_ANGLES[7]);	// centre-right
+				_buffer[0] += calc_sample(_sample, _angle, SOUND_7_1_ANGLES[0]);	// front-left
+				_buffer[1] += calc_sample(_sample, _angle, SOUND_7_1_ANGLES[1]);	// front-right
+				_buffer[2] += calc_sample(_sample, _angle, SOUND_7_1_ANGLES[2]);	// centre
+				_buffer[4] += calc_sample(_sample, _angle, SOUND_7_1_ANGLES[4]);	// rear-left
+				_buffer[5] += calc_sample(_sample, _angle, SOUND_7_1_ANGLES[5]);	// rear-right
+				_buffer[6] += calc_sample(_sample, _angle, SOUND_7_1_ANGLES[6]);	// centre-left
+				_buffer[7] += calc_sample(_sample, _angle, SOUND_7_1_ANGLES[7]);	// centre-right
 
 				_buffer[3] += _lfe;
 			}
 
 			void samples_5_1_surround(float* _buffer, const float& _sample, const float& _angle, const float& _lfe) {
-				_buffer[0] += calc_sample(_sample, _angle, Config::SOUND_5_1_ANGLES[0]);
-				_buffer[1] += calc_sample(_sample, _angle, Config::SOUND_5_1_ANGLES[1]);
-				_buffer[2] += calc_sample(_sample, _angle, Config::SOUND_5_1_ANGLES[2]);
-				_buffer[4] += calc_sample(_sample, _angle, Config::SOUND_5_1_ANGLES[4]);
-				_buffer[5] += calc_sample(_sample, _angle, Config::SOUND_5_1_ANGLES[5]);
+				_buffer[0] += calc_sample(_sample, _angle, SOUND_5_1_ANGLES[0]);
+				_buffer[1] += calc_sample(_sample, _angle, SOUND_5_1_ANGLES[1]);
+				_buffer[2] += calc_sample(_sample, _angle, SOUND_5_1_ANGLES[2]);
+				_buffer[4] += calc_sample(_sample, _angle, SOUND_5_1_ANGLES[4]);
+				_buffer[5] += calc_sample(_sample, _angle, SOUND_5_1_ANGLES[5]);
 
 				_buffer[3] += _lfe;
 			}
 
 			void samples_stereo(float* _buffer, const float& _sample, const float& _angle, const float& _lfe) {
-				_buffer[0] += calc_sample(_sample, _angle, Config::SOUND_STEREO_ANGLES[0]) + _lfe;
-				_buffer[1] += calc_sample(_sample, _angle, Config::SOUND_STEREO_ANGLES[1]) + _lfe;
+				_buffer[0] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[0]) + _lfe;
+				_buffer[1] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[1]) + _lfe;
 			}
 
 			void samples_mono(float* _buffer, const float& _sample, const float& _angle, const float& _lfe) {
-				_buffer[0] += calc_sample(_sample, _angle, Config::SOUND_STEREO_ANGLES[0]) + _lfe;
-				_buffer[0] += calc_sample(_sample, _angle, Config::SOUND_STEREO_ANGLES[1]) + _lfe;
+				_buffer[0] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[0]) + _lfe;
+				_buffer[0] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[1]) + _lfe;
 			}
 		};
 

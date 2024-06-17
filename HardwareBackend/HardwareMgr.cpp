@@ -1,3 +1,6 @@
+#include "pch.h"
+#include "framework.h"
+
 #include "HardwareMgr.h"
 
 namespace Backend {
@@ -50,10 +53,9 @@ namespace Backend {
 		}
 
 		// graphics
-		graphicsMgr = Graphics::GraphicsMgr::getInstance(&window);
+		graphicsMgr = Graphics::GraphicsMgr::getInstance(&window, graphicsSettings);
 		if (graphicsMgr != nullptr) {
-			std::string file_s = Config::ICON_FOLDER + Config::ICON_FILE;
-			const char* file_c = file_s.c_str();
+			const char* file_c = graphicsSettings.icon.c_str();
 			SDL_Surface* icon = SDL_LoadBMP(file_c);
 
 			SDL_SetWindowIcon(window, icon);
@@ -70,7 +72,7 @@ namespace Backend {
 			return false;
 		}
 
-		SDL_SetWindowMinimumSize(window, GUI_WIN_WIDTH_MIN, GUI_WIN_HEIGHT_MIN);
+		SDL_SetWindowMinimumSize(window, graphicsSettings.win_width_min, graphicsSettings.win_height_min);
 
 		// audio
 		audioMgr = Audio::AudioMgr::getInstance();

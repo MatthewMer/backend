@@ -1,6 +1,8 @@
+#include "pch.h"
+#include "framework.h"
+
 #include "ControlMgr.h"
 
-#include "general_config.h"
 #include "logger.h"
 #include "helper_functions.h"
 #include <format>
@@ -36,10 +38,10 @@ namespace Backend {
 			io.ConfigFlags &= ~ImGuiConfigFlags_NavEnableGamepad;
 
 			// init controller DB
-			controllerDatabase = Config::CONTROL_FOLDER + Config::CONTROL_DB;
+			controllerDatabase = _control_settings.controller_db;
 			SDL_GameControllerAddMappingsFromFile(controllerDatabase.c_str());
 
-			SDL_Surface* surface = SDL_LoadBMP((Config::CURSOR_FOLDER + Config::CURSOR_MAIN).c_str());
+			SDL_Surface* surface = SDL_LoadBMP(_control_settings.bmp_custom_cursor.c_str());
 			if (surface == nullptr) { LOG_ERROR("[SDL] create cursor surface: ", SDL_GetError()); } else {
 				if (cursor) { SDL_FreeCursor(cursor); }
 				cursor = SDL_CreateColorCursor(surface, 0, 0);

@@ -117,7 +117,7 @@ namespace Backend {
 
 		private:
 			// constructor/destructor
-			explicit GraphicsVulkan(SDL_Window** _window);
+			explicit GraphicsVulkan(SDL_Window** _window, const graphics_settings& _settings);
 			~GraphicsVulkan() = default;
 
 			// (de)init 2d render target

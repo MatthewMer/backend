@@ -71,10 +71,20 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
-    <IncludePath>$(ProjectDir)include\;$(IncludePath)</IncludePath>
+    <IncludePath>$(IncludePath);$(ProjectDir)include\;$(SolutionDir)submodules\SDL\include;$(SolutionDir)submodules\imgui\;$(SolutionDir)submodules\imgui\backends\;$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\shaderc\libshaderc\include;$(SolutionDir)submodules\glm\glm;$(SolutionDir)submodules\openal-soft\include\AL;$(SolutionDir)submodules\asio\asio\include\</IncludePath>
+    <LibraryPath>$(VULKAN_SDK)\Lib32;$(SolutionDir)gameboyx\lib32;$(SolutionDir)$(Platform)\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)include\</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)include\;$(SolutionDir)submodules\SDL\include;$(SolutionDir)submodules\imgui\;$(SolutionDir)submodules\imgui\backends\;$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\shaderc\libshaderc\include;$(SolutionDir)submodules\glm\glm;$(SolutionDir)submodules\openal-soft\include\AL;$(SolutionDir)submodules\asio\asio\include\</IncludePath>
+    <LibraryPath>$(VULKAN_SDK)\Lib\;$(SolutionDir)HardwareBackend\lib\;$(SolutionDir)$(Platform)\Release;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)include\;$(SolutionDir)submodules\SDL\include;$(SolutionDir)submodules\imgui\;$(SolutionDir)submodules\imgui\backends\;$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\shaderc\libshaderc\include;$(SolutionDir)submodules\glm\glm;$(SolutionDir)submodules\openal-soft\include\AL;$(SolutionDir)submodules\asio\asio\include\</IncludePath>
+    <LibraryPath>$(VULKAN_SDK)\Lib32;$(SolutionDir)gameboyx\lib32;$(SolutionDir)$(Platform)\Release;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)include\;$(SolutionDir)submodules\SDL\include;$(SolutionDir)submodules\imgui\;$(SolutionDir)submodules\imgui\backends\;$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\shaderc\libshaderc\include;$(SolutionDir)submodules\glm\glm;$(SolutionDir)submodules\openal-soft\include\AL;$(SolutionDir)submodules\asio\asio\include\</IncludePath>
+    <LibraryPath>$(VULKAN_SDK)\Lib\;$(SolutionDir)HardwareBackend\lib\;$(SolutionDir)$(Platform)\Release;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -84,13 +94,17 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\;$(SolutionDir)submodules\SDL\include;$(SolutionDir)submodules\imgui\;$(SolutionDir)submodules\imgui\backends\;$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\shaderc\libshaderc\include;$(SolutionDir)submodules\glm\glm;$(SolutionDir)submodules\openal-soft\include\AL;$(SolutionDir)submodules\asio\asio\include\</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -102,6 +116,8 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\;$(SolutionDir)submodules\SDL\include;$(SolutionDir)submodules\imgui\;$(SolutionDir)submodules\imgui\backends\;$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\shaderc\libshaderc\include;$(SolutionDir)submodules\glm\glm;$(SolutionDir)submodules\openal-soft\include\AL;$(SolutionDir)submodules\asio\asio\include\</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -110,6 +126,9 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib</AdditionalLibraryDirectories>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -119,13 +138,18 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
-      <AdditionalIncludeDirectories>$(ProjectDir)include\</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\;$(SolutionDir)submodules\SDL\include;$(SolutionDir)submodules\imgui\;$(SolutionDir)submodules\imgui\backends\;$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\shaderc\libshaderc\include;$(SolutionDir)submodules\glm\glm;$(SolutionDir)submodules\openal-soft\include\AL;$(SolutionDir)submodules\asio\asio\include\</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>
       </SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;shaderc_combined.lib;OpenAL32.lib;SDL2.lib</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -137,6 +161,8 @@
       <ConformanceMode>true</ConformanceMode>
       <PrecompiledHeader>Use</PrecompiledHeader>
       <PrecompiledHeaderFile>pch.h</PrecompiledHeaderFile>
+      <AdditionalIncludeDirectories>$(ProjectDir)include\;$(SolutionDir)submodules\SDL\include;$(SolutionDir)submodules\imgui\;$(SolutionDir)submodules\imgui\backends\;$(SolutionDir)submodules\Vulkan-Headers\include;$(SolutionDir)submodules\shaderc\libshaderc\include;$(SolutionDir)submodules\glm\glm;$(SolutionDir)submodules\openal-soft\include\AL;$(SolutionDir)submodules\asio\asio\include\</AdditionalIncludeDirectories>
+      <LanguageStandard>stdcpp20</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>
@@ -145,6 +171,10 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <Lib>
+      <AdditionalLibraryDirectories>$(ProjectDir)lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>vulkan-1.lib;shaderc_combined.lib;OpenAL32.lib;SDL2.lib</AdditionalDependencies>
+    </Lib>
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AudioMgr.h" />
@@ -159,7 +189,8 @@
     <ClInclude Include="GraphicsMgr.h" />
     <ClInclude Include="GraphicsVulkan.h" />
     <ClInclude Include="HardwareMgr.h" />
-    <ClInclude Include="HardwareStructs.h" />
+    <ClInclude Include="HardwareTypes.h" />
+    <ClInclude Include="helper_functions.h" />
     <ClInclude Include="NetworkMgr.h" />
     <ClInclude Include="pch.h" />
   </ItemGroup>
@@ -174,6 +205,7 @@
     <ClCompile Include="GraphicsMgr.cpp" />
     <ClCompile Include="GraphicsVulkan.cpp" />
     <ClCompile Include="HardwareMgr.cpp" />
+    <ClCompile Include="helper_functions.cpp" />
     <ClCompile Include="NetworkMgr.cpp" />
     <ClCompile Include="pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>

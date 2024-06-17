@@ -5,16 +5,51 @@
 #include <imgui_impl_sdl2.h>
 #include <atomic>
 
-#include "general_config.h"
-#include "HardwareStructs.h"
+#include "HardwareTypes.h"
 
 namespace Backend {
 	namespace Graphics {
+#ifndef GRAPHICS_DEBUG
+		//#define GRAPHICS_DEBUG
+#endif
+
+		const std::string SHADER_CACHE = "/cache/";
+
+		inline const u16 ID_NVIDIA = 0x10DE;
+		inline const u16 ID_AMD = 0x1002;
+
+		inline const std::unordered_map<u16, std::string> VENDOR_IDS = {
+			{0x1002, "AMD"},
+			{0x10DE, "NVIDIA"},
+			{0x1043, "ASUS"},
+			{0x196D, "Club 3D"},
+			{0x1092, "Diamond Multimedia"},
+			{0x18BC, "GeCube"},
+			{0x1458, "Gigabyte"},
+			{0x17AF, "HIS"},
+			{0x16F3, "Jetway"},
+			{0x1462, "MSI"},
+			{0x1DA2, "Sapphire"},
+			{0x148C, "PowerColor"},
+			{0x1545, "VisionTek"},
+			{0x1682, "XFX"},
+			{0x1025, "Acer"},
+			{0x106B, "Apple"},
+			{0x1028, "Dell"},
+			{0x107B, "Gateway"},
+			{0x103C, "HP"},
+			{0x17AA, "Lenovo"},
+			{0x104D, "Sony"},
+			{0x1179, "Toshiba"}
+		};
+
+#define TEX2D_CHANNELS			    4
+
 		class GraphicsMgr {
 
 		public:
 			// get/reset vkInstance
-			static GraphicsMgr* getInstance(SDL_Window** _window);
+			static GraphicsMgr* getInstance(SDL_Window** _window, const graphics_settings& _settings);
 			static void resetInstance();
 
 			// render
@@ -48,8 +83,20 @@ namespace Backend {
 
 		protected:
 
-			explicit GraphicsMgr() = default;
+			explicit GraphicsMgr(const graphics_settings& _settings) {
+				title = _settings.app_title;
+				vMajor = _settings.v_major;
+				vMinor = _settings.v_minor;
+				vPatch = _settings.v_patch;
+				fontMain = _settings.font;
+				shaderFolder = _settings.shader_folder;
+			}
 			~GraphicsMgr() = default;
+
+			std::string title = "";
+			u32 vMajor = 0;
+			u32 vMinor = 0;
+			u32 vPatch = 0;
 
 			// sdl
 			SDL_Window* window = nullptr;
@@ -72,11 +119,15 @@ namespace Backend {
 			u32 win_width = 0;
 			u32 win_height = 0;
 
+			std::string fontMain = "";
+
 			virtual_graphics_information virtGraphicsInfo = {};
 
-			int shadersCompiled;
-			int shadersTotal;
-			bool shaderCompilationFinished;
+			int shadersCompiled = 0;
+			int shadersTotal = 0;
+			bool shaderCompilationFinished = false;
+
+			std::string shaderFolder = "";
 
 			std::vector<ImFont*> fonts;
 

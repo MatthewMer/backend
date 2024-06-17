@@ -1,7 +1,14 @@
+#include "pch.h"
+#include "framework.h"
+
 #include "NetworkMgr.h"
-#include "general_config.h"
 #include "helper_functions.h"
 #include "logger.h"
+
+#define IP_ADDR_MIN 0
+#define IP_ADDR_MAX 255
+#define PORT_MIN 1024
+#define PORT_MAX 65535
 
 namespace Backend {
 	namespace Network {

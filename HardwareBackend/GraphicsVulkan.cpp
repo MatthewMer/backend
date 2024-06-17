@@ -1,10 +1,11 @@
+#include "pch.h"
+#include "framework.h"
+
 #include "GraphicsVulkan.h"
 
 #include "logger.h"
-#include "general_config.h"
 #include "helper_functions.h"
 #include "data_io.h"
-#include "general_config.h"
 
 #include <unordered_map>
 #include <format>
@@ -18,10 +19,14 @@ using namespace std;
 
 namespace Backend {
 	namespace Graphics {
+#ifdef GRAPHICS_DEBUG
+#define VK_VALIDATION "VK_LAYER_KHRONOS_validation"
+#endif
+
 		const vector<const char*> VK_ENABLED_LAYERS = {
-		#ifdef GRAPHICS_DEBUG
+#ifdef GRAPHICS_DEBUG
 			"VK_LAYER_KHRONOS_validation"
-		#endif
+#endif
 		};
 
 		#define VERT_EXT		"vert"
@@ -200,9 +205,9 @@ namespace Backend {
 		VkBool32 VKAPI_CALL debug_report_callback(VkDebugUtilsMessageSeverityFlagBitsEXT _severity, VkDebugUtilsMessageTypeFlagsEXT messageTypes, const VkDebugUtilsMessengerCallbackDataEXT* _callback_data, void* userData);
 		#endif
 
-		GraphicsVulkan::GraphicsVulkan(SDL_Window** _window) {
+		GraphicsVulkan::GraphicsVulkan(SDL_Window** _window, const graphics_settings& _settings) : GraphicsMgr(_settings) {
 			auto window_flags = (SDL_WindowFlags)(SDL_WINDOW_VULKAN | SDL_WINDOW_RESIZABLE | SDL_WINDOW_ALLOW_HIGHDPI);
-			*_window = SDL_CreateWindow(Config::APP_TITLE.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, GUI_WIN_WIDTH, GUI_WIN_HEIGHT, window_flags);
+			*_window = SDL_CreateWindow(_settings.app_title.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, _settings.win_width, _settings.win_height, window_flags);
 			window = *_window;
 
 			if (!window) {
@@ -705,8 +710,8 @@ namespace Backend {
 
 			VkApplicationInfo vk_app_info = {};
 			vk_app_info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
-			vk_app_info.pApplicationName = Config::APP_TITLE.c_str();
-			vk_app_info.applicationVersion = VK_MAKE_VERSION(GBX_VERSION_MAJOR, GBX_VERSION_MINOR, GBX_VERSION_PATCH);
+			vk_app_info.pApplicationName = title.c_str();
+			vk_app_info.applicationVersion = VK_MAKE_VERSION(vMajor, vMinor, vPatch);
 			vk_app_info.apiVersion = VK_API_VERSION_1_0;
 
 			VkInstanceCreateInfo vk_create_info = {};
@@ -842,18 +847,18 @@ namespace Backend {
 			std::string name = std::string(physicalDeviceProperties.deviceName);
 
 			u16 vendor_id = physicalDeviceProperties.vendorID & 0xFFFF;
-			if (Config::VENDOR_IDS.find(vendor_id) != Config::VENDOR_IDS.end()) {
-				vendor = Config::VENDOR_IDS.at(vendor_id);
+			if (VENDOR_IDS.find(vendor_id) != VENDOR_IDS.end()) {
+				vendor = VENDOR_IDS.at(vendor_id);
 			} else {
 				vendor = N_A;
 			}
 
 			u32 driver = physicalDeviceProperties.driverVersion;
-			if (vendor_id == Config::ID_NVIDIA) {
+			if (vendor_id == ID_NVIDIA) {
 				driverVersion = std::format("{}.{}", (driver >> 22) & 0x3ff, (driver >> 14) & 0xff);
 			}
 			// TODO: doesn't work properly for AMD cards, will get fixed in the future
-			else if (vendor_id == Config::ID_AMD) {
+			else if (vendor_id == ID_AMD) {
 				driverVersion = std::format("{}.{}", driver >> 14, driver & 0x3fff);
 			} else {
 				driverVersion = N_A;
@@ -1109,7 +1114,8 @@ namespace Backend {
 			init_info.MinImageCount = 2;
 			init_info.ImageCount = (u32)images.size();
 			init_info.MSAASamples = sample_count;
-			if (!ImGui_ImplVulkan_Init(&init_info, renderPass)) {
+			init_info.RenderPass = renderPass;
+			if (!ImGui_ImplVulkan_Init(&init_info)) {
 				LOG_ERROR("[vulkan] init imgui");
 				return false;
 			}
@@ -1118,8 +1124,7 @@ namespace Backend {
 			{
 				// font loading and atlas rebuild before font texture upload to GPU
 				ImGuiIO& io = ImGui::GetIO();
-				std::string main_font = Config::FONT_FOLDER + Config::FONT_MAIN;
-				const char* font = main_font.c_str();
+				const char* font = fontMain.c_str();
 				if (fonts.size() == 0) { fonts.emplace_back(); }
 
 				io.Fonts->AddFontDefault();
@@ -1142,7 +1147,7 @@ namespace Backend {
 					return false;
 				}
 				{
-					ImGui_ImplVulkan_CreateFontsTexture(commandBuffers[0]);
+					ImGui_ImplVulkan_CreateFontsTexture();
 				}
 				if (vkEndCommandBuffer(commandBuffers[0]) != VK_SUCCESS) {
 					LOG_ERROR("[vulkan] imgui end command buffer");
@@ -1159,7 +1164,6 @@ namespace Backend {
 				}
 
 				WaitIdle();
-				ImGui_ImplVulkan_DestroyFontUploadObjects();
 			}
 
 			LOG_INFO("[vulkan] imgui initialized");
@@ -1694,7 +1698,7 @@ namespace Backend {
 
 			auto enumeratedShaderFiles = vector<string>();
 
-			FileIO::get_files_in_path(enumeratedShaderFiles, Config::SHADER_FOLDER);
+			FileIO::get_files_in_path(enumeratedShaderFiles, shaderFolder);
 			shaderSourceFiles = vector<pair<string, string>>();
 
 			for (const auto& n : enumeratedShaderFiles) {
@@ -1821,7 +1825,7 @@ namespace Backend {
 		}
 		#endif
 
-		bool compile_shader(vector<char>& _byte_code, const string& _shader_source_file, const shaderc_compiler_t& _compiler, const shaderc_compile_options_t& _options) {
+		bool compile_shader(vector<char>& _byte_code, const string& _shader_source_file, const shaderc_compiler_t& _compiler, const shaderc_compile_options_t& _options, const std::string& _shader_cache) {
 			auto source_text_vec = vector<char>();
 			if (!FileIO::read_data(source_text_vec, _shader_source_file)) {
 				LOG_ERROR("[vulkan] read shader source ", _shader_source_file);
@@ -1852,7 +1856,7 @@ namespace Backend {
 			// uncomment this section to write the compiled bytecode to a *.spv file in ./shader/spir_v/
 			auto byte_code_vec = vector<char>(byte_code, byte_code + size);
 			auto file_name_parts = Helpers::split_string(file_name_str, ".");
-			string out_file_path = Config::SPIR_V_FOLDER + file_name_parts.front() + "_" + file_name_parts.back() + "." + SPIRV_EXT;
+			string out_file_path = _shader_cache + file_name_parts.front() + "_" + file_name_parts.back() + "." + SPIRV_EXT;
 			FileIO::write_data(byte_code_vec, out_file_path, true);
 			shaderc_result_release(result);
 

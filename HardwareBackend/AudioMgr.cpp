@@ -1,4 +1,7 @@
-﻿#include "AudioMgr.h"
+﻿#include "pch.h"
+#include "framework.h"
+
+#include "AudioMgr.h"
 
 #include "AudioOpenAL.h"
 #include "AudioSDL.h"
