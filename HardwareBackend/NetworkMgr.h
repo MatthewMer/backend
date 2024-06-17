@@ -7,8 +7,8 @@
 #define _WIN32_WINNT 0x0A00
 #endif
 #endif
-#include "asio.hpp"
-#include "thread"
+#include "../submodules/asio/asio/include/asio.hpp"
+#include <thread>
 
 namespace Backend {
 	namespace Network {
