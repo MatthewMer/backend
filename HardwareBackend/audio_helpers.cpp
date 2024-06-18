@@ -5,6 +5,10 @@
 
 namespace Backend {
 	namespace Audio {
+		std::complex<float>** fft::fft_buffer = nullptr;
+		int fft::m = 0;
+		int fft::n = 0;
+
 		size_t to_power_of_two(const size_t& _in) {
 			return (size_t)pow(2, (int)std::ceil(log2(_in)));
 		}
@@ -34,66 +38,95 @@ namespace Backend {
 		// FFT based on Cooley-Tukey
 		// returns DFT (size of N) with the phases, magnitudes and frequencies in cartesian form (e.g. 3.5+2.6i)
 		// example in pseudo code: https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm
-		void fft_cooley_tukey(std::vector<std::complex<float>>& _samples) {
+		inline void fft::resize_fft_buffer(const int& _N) {
+			if (n < _N) {
+				for (int i = 0; i < m; i++) {
+					delete[] fft_buffer[i];
+				}
+				delete[] fft_buffer;
+
+				size_t e = (size_t)log2(_N) + 1;
+				fft_buffer = new std::complex<float>*[e];
+				for (int i = 0; i < e; i++) {
+					fft_buffer[i] = new std::complex<float>[_N];
+				}
+
+				n = _N;
+				m = e;
+			}
+		}
+
+		void fft::perform_fft(std::vector<std::complex<float>>& _samples) {
+			resize_fft_buffer((int)_samples.size());
+			std::copy(_samples.begin(), _samples.end(), fft_buffer[0]);
+			fft_cooley_tukey((int)_samples.size(), 0, 0);
+			std::copy(fft_buffer[0], fft_buffer[0] + _samples.size(), _samples.begin());
+		}
+
+		void fft::fft_cooley_tukey(const int& _N, const int& _i, const int& _offset) {
 			// only one sample
-			if (_samples.size() == 1) {
+			if (_N == 1) {
 				return;
 			}
 
 			// split in 2 arrays, one for all elements where n is odd and one where n is even
-			int N = (int)_samples.size();
-			std::vector<std::complex<float>> e = std::vector<std::complex<float>>(N / 2);
-			std::vector<std::complex<float>> o = std::vector<std::complex<float>>(N / 2);
-			for (int n = 0; n < N / 2; n++) {
-				e[n] = _samples[n * 2];
-				o[n] = _samples[n * 2 + 1];
+			for (int n = 0; n < _N / 2; n++) {
+				fft_buffer[_i + 1][_offset + n]				= fft_buffer[_i][_offset + n * 2];
+				fft_buffer[_i + 1][_offset + n + _N / 2]	= fft_buffer[_i][_offset + n * 2 + 1];
 			}
 
 			// recursively call fft for all stages (with orders power of 2)
-			ifft_cooley_tukey(e);
-			ifft_cooley_tukey(o);
+			fft_cooley_tukey(_N / 2, _i + 1, _offset);
+			fft_cooley_tukey(_N / 2, _i + 1, _offset + _N / 2);
 
 			// twiddel factors ( e^(-i*2*pi*k/N) , where k = index and N = order
 			// used for shifting the signal
-			for (int k = 0; k < N / 2; k++) {
-				float ang = (float)(2 * M_PI * k / N);
-				std::complex<float> p = e[k];
-				std::complex<float> q = std::polar(1.f, (float)(-2.f * M_PI * (float)k / N)) * o[k];
-				_samples[k] = p + q;
-				_samples[k + N / 2] = p - q;
+			for (int k = 0; k < _N / 2; k++) {
+				float ang = (float)(2 * M_PI * k / _N);
+				std::complex<float> p = fft_buffer[_i + 1][_offset + k];
+				std::complex<float> q = std::polar(1.f, (float)(-2.f * M_PI * (float)k / _N)) * fft_buffer[_i + 1][_offset + k + _N / 2];
+				fft_buffer[_i][_offset + k] = p + q;
+				fft_buffer[_i][_offset + k + _N / 2] = p - q;
 			}
 		}
 
 		// inverse FFT: convert samples from frequency domain back to time domain (signal)
 		// Formulas can be found here: https://www.dsprelated.com/showarticle/800.php
 		// x[n] = 1/N * sum(m=0 to N-1) (X[m]*(cos(2*PI*m*n/N)+i*sin(2*PI*m*n/N)))		-> discarded normalization factor 1/N
-		void ifft_cooley_tukey(std::vector<std::complex<float>>& _samples) {
+		void fft::perform_ifft(std::vector<std::complex<float>>& _samples) {
+			resize_fft_buffer((int)_samples.size());
+			std::copy(_samples.begin(), _samples.end(), fft_buffer[0]);
+			ifft_cooley_tukey((int)_samples.size(), 0, 0);
+			std::copy(fft_buffer[0], fft_buffer[0] + _samples.size(), _samples.begin());
+
+			int divisor = sqrt((int)_samples.size());
+			std::transform(_samples.begin(), _samples.end(), _samples.begin(), [&divisor](std::complex<float>& val) { return val /= divisor; });
+		}
+
+		void fft::ifft_cooley_tukey(const int& _N, const int& _i, const int& _offset) {
 			// only one sample
-			if (_samples.size() == 1) {
+			if (_N == 1) {
 				return;
 			}
 
 			// split in 2 arrays, one for all elements where n is odd and one where n is even
-			int N = (int)_samples.size();
-			std::vector<std::complex<float>> e = std::vector<std::complex<float>>(N / 2);
-			std::vector<std::complex<float>> o = std::vector<std::complex<float>>(N / 2);
-			for (int n = 0; n < N / 2; n++) {
-				e[n] = _samples[n * 2];
-				o[n] = _samples[n * 2 + 1];
+			for (int n = 0; n < _N / 2; n++) {
+				fft_buffer[_i + 1][_offset + n] = fft_buffer[_i][_offset + n * 2];
+				fft_buffer[_i + 1][_offset + n + _N / 2] = fft_buffer[_i][_offset + n * 2 + 1];
 			}
 
 			// recursively call fft for all stages (with orders power of 2)
-			ifft_cooley_tukey(e);
-			ifft_cooley_tukey(o);
+			ifft_cooley_tukey(_N / 2, _i + 1, _offset);
+			ifft_cooley_tukey(_N / 2, _i + 1, _offset + _N / 2);
 
 			// twiddel factors ( e^(-i*2*pi*k/N) , where k = index and N = order
 			// used for shifting the signal
-			for (int k = 0; k < N / 2; k++) {
-				float ang = (float)(2 * M_PI * k / N);
-				std::complex<float> p = e[k];
-				std::complex<float> q = std::polar(1.f, (float)(2.f * M_PI * (float)k / N)) * o[k];
-				_samples[k] = p + q;
-				_samples[k + N / 2] = p - q;
+			for (int k = 0; k < _N / 2; k++) {
+				float ang = (float)(2 * M_PI * k / _N);
+				std::complex<float> p = fft_buffer[_i + 1][_offset + k];
+				std::complex<float> q = std::polar(1.f, (float)(2.f * M_PI * (float)k / _N)) * fft_buffer[_i + 1][_offset + k + _N / 2];
+				fft_buffer[_i][_offset + k] = p + q;
+				fft_buffer[_i][_offset + k + _N / 2] = p - q;
 			}
 		}
 

@@ -325,8 +325,9 @@ namespace Backend {
 						float reverb = r_buffer.next();
 
 						for (int j = 0; j < virt_audio_info->channels; j++) {
-							float sample = (virt_samples[j][i].real() + lfe_buffer[i].real() * lfe + reverb) * volume;
-							(this->*func)(&samples->buffer[offset], sample, virt_angles[j], lfe_buffer[i].real() * lfe * 10);
+							float low_frequency = lfe_buffer[i].real() * lfe;
+							float sample = (virt_samples[j][i].real() + reverb) * volume;
+							(this->*func)(&samples->buffer[offset], sample, virt_angles[j], low_frequency);
 							r_buffer.add(sample);
 						}
 						(offset += audio_info->channels) %= samples->buffer.size();
