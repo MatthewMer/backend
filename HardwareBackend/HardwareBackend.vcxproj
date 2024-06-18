@@ -73,6 +73,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(IncludePath);$(ProjectDir)include\;$(ProjectDir)..\submodules\SDL\include;$(ProjectDir)..\submodules\imgui\;$(ProjectDir)..\submodules\imgui\backends\;$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\shaderc\libshaderc\include;$(ProjectDir)..\submodules\glm\glm;$(ProjectDir)..\submodules\openal-soft\include\AL;$(ProjectDir)..\submodules\asio\asio\include\</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib32;$(ProjectDir)..\HardwareBackend\lib32;$(ProjectDir)..\$(Platform)\Release;$(LibraryPath);$(SolutionDir)$(Platform)\Debug\</LibraryPath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)include\;$(ProjectDir)..\submodules\SDL\include;$(ProjectDir)..\submodules\imgui\;$(ProjectDir)..\submodules\imgui\backends\;$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\shaderc\libshaderc\include;$(ProjectDir)..\submodules\glm\glm;$(ProjectDir)..\submodules\openal-soft\include\AL;$(ProjectDir)..\submodules\asio\asio\include\</IncludePath>
@@ -81,6 +83,8 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)include\;$(ProjectDir)..\submodules\SDL\include;$(ProjectDir)..\submodules\imgui\;$(ProjectDir)..\submodules\imgui\backends\;$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\shaderc\libshaderc\include;$(ProjectDir)..\submodules\glm\glm;$(ProjectDir)..\submodules\openal-soft\include\AL;$(ProjectDir)..\submodules\asio\asio\include\</IncludePath>
     <LibraryPath>$(VULKAN_SDK)\Lib32;$(ProjectDir)..\HardwareBackend\lib32;$(ProjectDir)..\$(Platform)\Release;$(LibraryPath);$(SolutionDir)$(Platform)\Release\</LibraryPath>
+    <OutDir>$(SolutionDir)$(Platform)\$(Configuration)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(ProjectDir)include\;$(ProjectDir)..\submodules\SDL\include;$(ProjectDir)..\submodules\imgui\;$(ProjectDir)..\submodules\imgui\backends\;$(ProjectDir)..\submodules\Vulkan-Headers\include;$(ProjectDir)..\submodules\shaderc\libshaderc\include;$(ProjectDir)..\submodules\glm\glm;$(ProjectDir)..\submodules\openal-soft\include\AL;$(ProjectDir)..\submodules\asio\asio\include\</IncludePath>
