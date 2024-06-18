@@ -71,6 +71,8 @@ namespace Backend {
 		static bool CheckNetwork();
 		static void CloseNetwork();
 
+		static void SetFrequencies(const bool& _high, const bool& _low);
+
 		static bool CheckFrame();
 
 	private:

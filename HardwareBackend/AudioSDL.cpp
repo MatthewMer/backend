@@ -65,6 +65,9 @@ namespace Backend {
 			audioInfo.decay.store(_audio_settings.decay);
 			audioInfo.delay.store(_audio_settings.delay);
 			audioInfo.reload_reverb.store(false);
+			audioInfo.high_frequency.store(_audio_settings.high_frequencies);
+			audioInfo.low_frequency.store(_audio_settings.low_frequencies);
+			audioInfo.reload_frequencies.store(false);
 
 			// audio samples (audio api data)
 			int format_size = SDL_AUDIO_BITSIZE(have.format) / 8;
@@ -113,35 +116,6 @@ namespace Backend {
 				n = .0f;
 			}
 			LOG_INFO("[SDL] audio backend stopped");
-		}
-
-		// _user_data: struct passed to audiospec, _device_buffer: the audio buffer snippet that needs to be filled, _length: length of this buffer snippet
-		void audio_callback(void* _user_data, u8* _device_buffer, int _length) {
-			audio_samples* samples = (audio_samples*)_user_data;
-
-			float* reg_2 = samples->buffer.data();
-			float* reg_1 = reg_2 + samples->read_cursor;
-
-			int b_read_cursor = samples->read_cursor * sizeof(float);
-
-			int reg_1_size, reg_2_size;
-			if (b_read_cursor + _length > samples->buffer_size) {
-				reg_1_size = samples->buffer_size - b_read_cursor;
-				reg_2_size = _length - reg_1_size;
-			} else {
-				reg_1_size = _length;
-				reg_2_size = 0;
-			}
-
-			SDL_memcpy(_device_buffer, reg_1, reg_1_size);
-			SDL_memcpy(_device_buffer + reg_1_size, reg_2, reg_2_size);
-
-			memset(reg_1, 0, reg_1_size);
-			memset(reg_2, 0, reg_2_size);
-
-			samples->read_cursor = ((b_read_cursor + _length) % samples->buffer_size) / sizeof(float);
-
-			samples->notifyBufferUpdate.notify_one();
 		}
 
 		struct delay_buffer {
@@ -227,6 +201,8 @@ namespace Backend {
 			int buff_size;
 			float lfe;
 			float volume;
+			bool high_frequency = true;
+			bool low_frequency = true;
 
 			speakers() = delete;
 			speakers(audio_information* _audio_info, virtual_audio_information* _virt_audio_info, audio_samples* _samples)
@@ -243,6 +219,8 @@ namespace Backend {
 				lfe = _audio_info->lfe.load();
 				volume = _audio_info->master_volume.load();
 				buff_size = _audio_info->buff_size;
+				high_frequency = _audio_info->high_frequency.load();
+				low_frequency = _audio_info->low_frequency.load();
 
 				size_t lfe_buf_size = low_pass.get_size();
 				lfe_buffer = std::vector<std::complex<float>>(lfe_buf_size);
@@ -294,6 +272,11 @@ namespace Backend {
 					reset_reverb(audio_info->delay.load(), audio_info->decay.load());
 					audio_info->reload_reverb.store(false);
 				}
+				if (audio_info->reload_frequencies.load()) {
+					high_frequency = audio_info->high_frequency.load();
+					low_frequency = audio_info->low_frequency.load();
+					audio_info->reload_frequencies.store(false);
+				}
 
 				SDL_LockAudioDevice(*device);
 
@@ -325,9 +308,19 @@ namespace Backend {
 						float reverb = r_buffer.next();
 
 						for (int j = 0; j < virt_audio_info->channels; j++) {
-							float low_frequency = lfe_buffer[i].real() * lfe;
-							float sample = (virt_samples[j][i].real() + reverb) * volume;
-							(this->*func)(&samples->buffer[offset], sample, virt_angles[j], low_frequency);
+							float lfe_sample;
+							if (low_frequency) {
+								lfe_sample = lfe_buffer[i].real() * lfe;
+							} else {
+								lfe_sample = .0f;
+							}
+							float sample;
+							if (high_frequency) {
+								sample = (virt_samples[j][i].real() + reverb) * volume;
+							} else {
+								sample = .0f;
+							}
+							(this->*func)(&samples->buffer[offset], sample, virt_angles[j], lfe_sample);
 							r_buffer.add(sample);
 						}
 						(offset += audio_info->channels) %= samples->buffer.size();
@@ -390,6 +383,35 @@ namespace Backend {
 				_buffer[0] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[1]) + _lfe;
 			}
 		};
+
+		// _user_data: struct passed to audiospec, _device_buffer: the audio buffer snippet that needs to be filled, _length: length of this buffer snippet
+		void audio_callback(void* _user_data, u8* _device_buffer, int _length) {
+			audio_samples* samples = (audio_samples*)_user_data;
+
+			float* reg_2 = samples->buffer.data();
+			float* reg_1 = reg_2 + samples->read_cursor;
+
+			int b_read_cursor = samples->read_cursor * sizeof(float);
+
+			int reg_1_size, reg_2_size;
+			if (b_read_cursor + _length > samples->buffer_size) {
+				reg_1_size = samples->buffer_size - b_read_cursor;
+				reg_2_size = _length - reg_1_size;
+			} else {
+				reg_1_size = _length;
+				reg_2_size = 0;
+			}
+
+			SDL_memcpy(_device_buffer, reg_1, reg_1_size);
+			SDL_memcpy(_device_buffer + reg_1_size, reg_2, reg_2_size);
+
+			memset(reg_1, 0, reg_1_size);
+			memset(reg_2, 0, reg_2_size);
+
+			samples->read_cursor = ((b_read_cursor + _length) % samples->buffer_size) / sizeof(float);
+
+			samples->notifyBufferUpdate.notify_one();
+		}
 
 		void audio_thread(audio_information* _audio_info, virtual_audio_information* _virt_audio_info, audio_samples* _samples) {
 			speakers sp = speakers(

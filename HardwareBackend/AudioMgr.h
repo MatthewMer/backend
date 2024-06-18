@@ -80,6 +80,10 @@ namespace Backend {
 			alignas(64) std::atomic<float> delay = .02f;
 			alignas(64) std::atomic<float> decay = .1f;
 			alignas(64) std::atomic<bool> reload_reverb = false;
+
+			alignas(64) std::atomic<bool> reload_frequencies = false;
+			alignas(64) std::atomic<bool> high_frequency = true;
+			alignas(64) std::atomic<bool> low_frequency = true;
 		};
 
 		class AudioMgr {
@@ -97,6 +101,8 @@ namespace Backend {
 
 			void SetVolume(const float& _volume, const float& _lfe);
 			void SetReverb(const float& _delay, const float& _decay);
+
+			void SetFrequencies(const bool& _high, const bool& _low);
 
 			// clone/assign protection
 			AudioMgr(AudioMgr const&) = delete;

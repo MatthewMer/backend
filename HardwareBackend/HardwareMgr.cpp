@@ -277,4 +277,8 @@ namespace Backend {
 	void HardwareMgr::CloseNetwork() {
 		networkMgr->ShutdownSocket();
 	}
+
+	void HardwareMgr::SetFrequencies(const bool& _high, const bool& _low) {
+		audioMgr->SetFrequencies(_high, _low);
+	}
 }

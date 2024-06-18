@@ -59,6 +59,8 @@ namespace Backend {
 		float delay = 0;
 		float decay = 0;
 		int sampling_rate_max = 0;
+		bool high_frequencies = true;
+		bool low_frequencies = true;
 	};
 
 	struct control_settings {
