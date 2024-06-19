@@ -374,13 +374,13 @@ namespace Backend {
 			}
 
 			void samples_stereo(float* _buffer, const float& _sample, const float& _angle, const float& _lfe) {
-				_buffer[0] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[0]) + _lfe;
-				_buffer[1] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[1]) + _lfe;
+				_buffer[0] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[0]);
+				_buffer[1] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[1]);
 			}
 
 			void samples_mono(float* _buffer, const float& _sample, const float& _angle, const float& _lfe) {
-				_buffer[0] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[0]) + _lfe;
-				_buffer[0] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[1]) + _lfe;
+				_buffer[0] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[0]);
+				_buffer[0] += calc_sample(_sample, _angle, SOUND_STEREO_ANGLES[1]);
 			}
 		};
 

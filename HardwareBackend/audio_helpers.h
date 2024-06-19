@@ -30,8 +30,8 @@ namespace Backend {
 			static int m;
 			static int n;
 
-			static void fft_cooley_tukey(const int& _N, const int& _i, const int& _offset);
-			static void ifft_cooley_tukey(const int& _N, const int& _i, const int& _offset);
+			static void fft_cooley_tukey(std::complex<float>* _data_src, std::complex<float>* _data_dest, const int& _N, const int& _i, const int& _offset);
+			static void ifft_cooley_tukey(std::complex<float>* _data_src, std::complex<float>* _data_dest, const int& _N, const int& _i, const int& _offset);
 
 			inline static void resize_fft_buffer(const int& _N);
 		};
