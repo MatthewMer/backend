@@ -156,7 +156,7 @@ namespace Backend {
 			float decay = .0f;
 			int cursor = 0;
 
-			reverb_buffer() = delete;
+			reverb_buffer() = default;
 			reverb_buffer(const int& _delay, const float& _decay) : decay(_decay) {
 				if (_delay > 0) {
 					buffer.assign(_delay, .0f);
@@ -205,8 +205,7 @@ namespace Backend {
 			bool low_frequency = true;
 
 			speakers() = delete;
-			speakers(audio_information* _audio_info, virtual_audio_information* _virt_audio_info, audio_samples* _samples)
-				: r_buffer((int)(_audio_info->delay.load()* _audio_info->sampling_rate), _audio_info->decay.load()), low_pass(_audio_info->sampling_rate, 500, 100, false, _audio_info->buff_size) {
+			speakers(audio_information* _audio_info, virtual_audio_information* _virt_audio_info, audio_samples* _samples){
 				audio_info = _audio_info;
 				virt_audio_info = _virt_audio_info;
 				samples = _samples;
@@ -222,11 +221,24 @@ namespace Backend {
 				high_frequency = _audio_info->high_frequency.load();
 				low_frequency = _audio_info->low_frequency.load();
 
-				size_t lfe_buf_size = low_pass.get_size();
-				lfe_buffer = std::vector<std::complex<float>>(lfe_buf_size);
+				r_buffer = reverb_buffer((int)(delay * sampling_rate), decay);
+				low_pass = fir_filter(sampling_rate, 500, 100, false, buff_size);
+
+				if (low_pass.get_size() > buff_size) {
+					buff_size = low_pass.get_size();
+				} else {
+					low_pass.set_size(buff_size);
+				}
+
+				buff_size *= 2;
+
+				low_pass.set_size(buff_size);
+				low_pass.transform();
+
+				lfe_buffer = std::vector<std::complex<float>>(buff_size);
 				virt_samples = std::vector<std::vector<std::complex<float>>>(virt_audio_info->channels);
 				for (auto& n : virt_samples) {
-					n.resize(lfe_buf_size);
+					n.resize(buff_size);
 				}
 
 				switch (audio_info->channels) {
