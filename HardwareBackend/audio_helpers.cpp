@@ -86,7 +86,7 @@ namespace Backend {
 		void fft::perform_ifft(std::vector<std::complex<float>>& _samples) {
 			ifft_cooley_tukey(_samples.data(), (int)_samples.size());
 
-			int divisor = sqrt((int)_samples.size());
+			int divisor = (int)_samples.size();
 			std::transform(_samples.begin(), _samples.end(), _samples.begin(), [&divisor](std::complex<float>& val) { return val /= divisor; });
 		}
 
@@ -120,29 +120,29 @@ namespace Backend {
 		// could come in handy for something like a N64 where audio files (sort of) are played
 		// resources:
 		// https://en.wikipedia.org/wiki/Window_function
-		void window_tukey(std::vector<std::complex<float>>& _samples) {
-			int N = (int)_samples.size() - 1;
+		void window_tukey(std::complex<float>* _samples, const int& _N) {
+			int N = _N - 1;
 			int t_low = (int)(((alpha * N) / 2) + .5f);				// + .5f for rounding
 			int t_high = (int)((N - (alpha * N) / 2) + .5f);
 
 			for (int n = 0; n < t_low; n++) {
 				_samples[n] *= .5f - .5f * (float)cos(2 * M_PI * n / (alpha * N));
 			}
-			for (int n = t_high + 1; n < _samples.size(); n++) {
+			for (int n = t_high + 1; n < _N; n++) {
 				_samples[n] *= .5f - .5f * (float)cos(2 * M_PI * (N - n) / (alpha * N));
 			}
 		}
 
-		void window_hamming(std::vector<std::complex<float>>& _samples) {
-			int N = (int)_samples.size() - 1;
-			for (int i = 0; i < _samples.size(); i++) {
+		void window_hamming(std::complex<float>* _samples, const int& _N) {
+			int N = _N - 1;
+			for (int i = 0; i < _N; i++) {
 				_samples[i] *= (float)(0.54f - 0.46f * cos(2 * M_PI * i / N));
 			}
 		}
 
-		void window_blackman(std::vector<std::complex<float>>& _samples) {
-			int N = (int)_samples.size() - 1;
-			for (int n = 0; n < _samples.size(); n++) {
+		void window_blackman(std::complex<float>* _samples, const int& _N) {
+			int N = _N - 1;
+			for (int n = 0; n < _N; n++) {
 				_samples[n] *= (float)(0.42f - 0.5f * cos(2.f * M_PI * n / N) + 0.08f * cos(4.f * M_PI * n / N));
 			}
 		}
@@ -162,7 +162,7 @@ namespace Backend {
 			float BW = (float)_f_transtion / _sampling_rate;
 			int N = (int)std::ceil(4 / BW);
 			if (!(N % 2)) { N++; }
-			_impulse_response.assign(N, {});
+			_impulse_response.assign(N, std::complex<float>());
 
 			for (int n = 0; n < N; n++) {
 				if (n == ((N - 1) / 2)) {
@@ -172,7 +172,7 @@ namespace Backend {
 				}
 			}
 
-			window_tukey(_impulse_response);
+			window_tukey(_impulse_response.data(), (int)_impulse_response.size());
 
 			float sum = .0f;
 			for (const auto& n : _impulse_response) {

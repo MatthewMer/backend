@@ -64,10 +64,9 @@ namespace Backend {
 			audioInfo.lfe.store(_audio_settings.lfe);
 			audioInfo.decay.store(_audio_settings.decay);
 			audioInfo.delay.store(_audio_settings.delay);
-			audioInfo.reload_reverb.store(false);
 			audioInfo.high_frequency.store(_audio_settings.high_frequencies);
 			audioInfo.low_frequency.store(_audio_settings.low_frequencies);
-			audioInfo.reload_frequencies.store(false);
+			audioInfo.settings_changed.store(false);
 
 			// audio samples (audio api data)
 			int format_size = SDL_AUDIO_BITSIZE(have.format) / 8;
@@ -183,8 +182,9 @@ namespace Backend {
 			reverb_buffer r_buffer;
 			//delay_buffer d_buffer;
 
-			std::vector<std::complex<float>> lfe_buffer;
-			fir_filter low_pass;
+			int dist_cursor = 0;
+			std::vector<std::complex<float>> dist_buffer;
+			fir_filter low_pass_distance;
 
 			std::vector<float> virt_angles;
 			std::vector<std::vector<std::complex<float>>> virt_samples;
@@ -195,14 +195,16 @@ namespace Backend {
 			virtual_audio_information* virt_audio_info;
 			audio_samples* samples;
 
+			int buff_size;
 			float decay;
 			float delay;
 			int sampling_rate;
-			int buff_size;
 			float lfe;
 			float volume;
 			bool high_frequency = true;
 			bool low_frequency = true;
+			int channels;
+			int virt_channels;
 
 			speakers() = delete;
 			speakers(audio_information* _audio_info, virtual_audio_information* _virt_audio_info, audio_samples* _samples){
@@ -220,23 +222,15 @@ namespace Backend {
 				buff_size = _audio_info->buff_size;
 				high_frequency = _audio_info->high_frequency.load();
 				low_frequency = _audio_info->low_frequency.load();
+				channels = _audio_info->channels;
+				virt_channels = _virt_audio_info->channels;
 
 				r_buffer = reverb_buffer((int)(delay * sampling_rate), decay);
-				low_pass = fir_filter(sampling_rate, 500, 100, false, buff_size);
+				low_pass_distance = fir_filter(sampling_rate, 3000, 100, false, buff_size, 16);
+				dist_buffer = std::vector<std::complex<float>>(buff_size);
 
-				if (low_pass.get_size() > buff_size) {
-					buff_size = low_pass.get_size();
-				} else {
-					low_pass.set_size(buff_size);
-				}
-
-				buff_size *= 2;
-
-				low_pass.set_size(buff_size);
-				low_pass.transform();
-
-				lfe_buffer = std::vector<std::complex<float>>(buff_size);
-				virt_samples = std::vector<std::vector<std::complex<float>>>(virt_audio_info->channels);
+				// determine required buffer sizes
+				virt_samples = std::vector<std::vector<std::complex<float>>>(virt_channels);
 				for (auto& n : virt_samples) {
 					n.resize(buff_size);
 				}
@@ -261,33 +255,27 @@ namespace Backend {
 				}
 
 				float a;
-				if (audio_info->channels == SOUND_7_1 || audio_info->channels == SOUND_5_1) {
+				if (channels == SOUND_7_1 || channels == SOUND_5_1) {
 					a = 22.5f;
 				} else {
 					a = 45.f;
 				}
 
-				float step = (float)((360.f - (2 * a)) / (virt_audio_info->channels - 1));
+				float step = (float)((360.f - (2 * a)) / (virt_channels - 1));
 
-				for (int i = 0; i < virt_audio_info->channels; i++) {
+				for (int i = 0; i < virt_channels; i++) {
 					virt_angles.push_back(a * (float)(M_PI / 180.f));
 					a += step;
 				}
 			}
 
 			void process() {
-				if (audio_info->volume_changed.load()) {
+				if (audio_info->settings_changed.load()) {
 					set_volume(audio_info->master_volume.load(), audio_info->lfe.load());
-					audio_info->volume_changed.store(false);
-				}
-				if (audio_info->reload_reverb.load()) {
 					reset_reverb(audio_info->delay.load(), audio_info->decay.load());
-					audio_info->reload_reverb.store(false);
-				}
-				if (audio_info->reload_frequencies.load()) {
 					high_frequency = audio_info->high_frequency.load();
 					low_frequency = audio_info->low_frequency.load();
-					audio_info->reload_frequencies.store(false);
+					audio_info->settings_changed.store(false);
 				}
 
 				SDL_LockAudioDevice(*device);
@@ -303,41 +291,37 @@ namespace Backend {
 
 				if (reg_1_size || reg_2_size) {
 					// get samples from APU
-					int reg_1_samples = reg_1_size / audio_info->channels;
-					int reg_2_samples = reg_2_size / audio_info->channels;
+					int reg_1_samples = reg_1_size / channels;
+					int reg_2_samples = reg_2_size / channels;
 					int num_samples = reg_1_samples + reg_2_samples;
 
+					for (auto& n : virt_samples) {
+						n.assign(num_samples, std::complex<float>());
+					}
 					virt_audio_info->apu_callback(virt_samples, num_samples, sampling_rate);
 
-					std::fill(lfe_buffer.begin(), lfe_buffer.end(), std::complex<float>());
+					// low frequency
+					dist_buffer.assign(num_samples, std::complex<float>());
 					for (auto& n : virt_samples) {
-						std::transform(n.begin(), n.begin() + num_samples, lfe_buffer.begin(), lfe_buffer.begin(), [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs + rhs; });
+						std::transform(n.begin(), n.end(), dist_buffer.begin(), dist_buffer.begin(), [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs + rhs; });
 					}
-					low_pass.apply(lfe_buffer);
+					low_pass_distance.apply(dist_buffer);
 
 					int offset = samples->write_cursor;
 					for (int i = 0; i < num_samples; i++) {
 						float reverb = r_buffer.next();
 
 						for (int j = 0; j < virt_audio_info->channels; j++) {
-							float lfe_sample;
-							if (low_frequency) {
-								lfe_sample = lfe_buffer[i].real() * lfe;
-							} else {
-								lfe_sample = .0f;
-							}
-							float sample;
-							if (high_frequency) {
-								sample = (virt_samples[j][i].real() + reverb) * volume;
-							} else {
-								sample = .0f;
-							}
-							(this->*func)(&samples->buffer[offset], sample, virt_angles[j], lfe_sample);
-							r_buffer.add(sample);
+							float sample = (virt_samples[j][i].real() + reverb) * volume;
+							float hf_sample = (high_frequency ? sample : .0f);
+							float lfe_sample = (low_frequency ? sample * lfe : .0f);
+							(this->*func)(&samples->buffer[offset], hf_sample, virt_angles[j], lfe_sample);
 						}
-						(offset += audio_info->channels) %= samples->buffer.size();
-					}
 
+						r_buffer.add(dist_buffer[i].real());
+
+						(offset += channels) %= samples->buffer.size();
+					}
 					samples->write_cursor = (samples->write_cursor + reg_1_size + reg_2_size) % (int)samples->buffer.size();		// update cursor in bytes (due to the callback working in bytes instead of floats because of SDL)
 				}
 				SDL_UnlockAudioDevice(*device);

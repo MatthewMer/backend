@@ -23,7 +23,7 @@ namespace Backend {
 			{"44100 Hz", {44100, 512}},
 			{"48000 Hz", {48000, 512}},
 			{"88200 Hz", {88200, 1024}},
-			{"96000 Hz", {96000, 1024}}
+			{"96000 Hz", {96000, 2048}}
 		};
 
 		const float SOUND_7_1_ANGLES[8] = {
@@ -75,15 +75,14 @@ namespace Backend {
 
 			alignas(64) std::atomic<float> master_volume = 1.f;
 			alignas(64) std::atomic<float> lfe = 1.f;
-			alignas(64) std::atomic<bool> volume_changed = false;
 
 			alignas(64) std::atomic<float> delay = .02f;
 			alignas(64) std::atomic<float> decay = .1f;
-			alignas(64) std::atomic<bool> reload_reverb = false;
 
-			alignas(64) std::atomic<bool> reload_frequencies = false;
 			alignas(64) std::atomic<bool> high_frequency = true;
 			alignas(64) std::atomic<bool> low_frequency = true;
+
+			alignas(64) std::atomic<bool> settings_changed = false;
 		};
 
 		class AudioMgr {

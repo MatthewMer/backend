@@ -34,19 +34,19 @@ namespace Backend {
 		void AudioMgr::SetVolume(const float& _volume, const float& _lfe) {
 			audioInfo.master_volume.store(_volume);
 			audioInfo.lfe.store(_lfe);
-			audioInfo.volume_changed.store(true);
+			audioInfo.settings_changed.store(true);
 		}
 
 		void AudioMgr::SetReverb(const float& _delay, const float& _decay) {
 			audioInfo.decay.store(_decay);
 			audioInfo.delay.store(_delay);
-			audioInfo.reload_reverb.store(true);
+			audioInfo.settings_changed.store(true);
 		}
 
 		void AudioMgr::SetFrequencies(const bool& _high, const bool& _low) {
 			audioInfo.high_frequency.store(_high);
 			audioInfo.low_frequency.store(_low);
-			audioInfo.reload_frequencies.store(true);
+			audioInfo.settings_changed.store(true);
 		}
 	}
 }
