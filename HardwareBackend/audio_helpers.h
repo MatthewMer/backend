@@ -44,25 +44,24 @@ namespace Backend {
 			bool high_pass;
 			u32 depth;
 			u32 block_size;
+			int l_m;
 	
 			fir_filter() = default;
-			fir_filter(const int& _sampling_rate, const int& _f_cutoff, const int& _f_transition, const bool& _high_pass, const u32& _block_size, const u32& _depth)
-				: sampling_rate(_sampling_rate), f_cutoff(_f_cutoff), f_transition(_f_transition), high_pass(_high_pass), block_size(_block_size), depth(_depth) 
+			fir_filter(const int& _sampling_rate, const int& _f_cutoff, const int& _f_transition, const bool& _high_pass, const u32& _block_size)
+				: sampling_rate(_sampling_rate), f_cutoff(_f_cutoff), f_transition(_f_transition), high_pass(_high_pass), block_size(_block_size) 
 			{
 				fn_window_sinc(frequency_response, _sampling_rate, _f_cutoff, _f_transition, _high_pass);
-				size_t size = to_power_of_two(frequency_response.size() + block_size - 1);
-				if (size < block_size * depth) {
-					size = block_size * depth;
-				}
-				frequency_response.resize(size);
+				l_m = to_power_of_two(frequency_response.size() + block_size - 1);
+				frequency_response.resize(l_m);
 				fft::perform_fft(frequency_response);
 
+				depth = (int)std::ceil((float)l_m / block_size);
 				overlap_add.resize(depth);
+				size_t size = l_m;
 				std::for_each(overlap_add.begin(), overlap_add.end(), [&size](std::vector<std::complex<float>>& _in) { _in.resize(size); });
 			}
 
 			void apply(std::vector<std::complex<float>>& _samples) {
-				//window_tukey(_samples);
 				for (int i = 0; i < _samples.size() / block_size; i++) {
 					int offset = i * block_size;
 					auto sample_block = _samples.begin() + offset;
@@ -77,8 +76,14 @@ namespace Backend {
 
 					std::fill(sample_block, sample_block + block_size, std::complex<float>());
 					for (int j = 0; j < depth; j++) {
-						auto filtered_block = overlap_add[(cursor + i) % depth].begin() + j * block_size;
-						std::transform(sample_block, sample_block + block_size, filtered_block, sample_block, [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs + rhs; });
+						auto& buffer = overlap_add[(cursor + i) % depth];
+						auto filtered_block = buffer.begin() + j * block_size;
+						int length = std::distance(filtered_block, buffer.end());
+						if (length >= block_size) {
+							std::transform(sample_block, sample_block + block_size, filtered_block, sample_block, [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs + rhs; });
+						} else {
+							std::transform(sample_block, sample_block + length, filtered_block, sample_block, [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs + rhs; });
+						}
 					}
 
 					--cursor %= depth;
