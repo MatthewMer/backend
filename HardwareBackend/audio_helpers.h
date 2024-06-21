@@ -77,18 +77,15 @@ namespace Backend {
 					fft::perform_ifft(N_cur);
 
 					std::copy(B_, B_ + B, N_cur.begin());
-					int L_ = 0;
 					for (int j = 1; j < depth; j++) {
-						auto& N_prev = overlap_add[(cursor + j + 1) % depth];
+						auto& N_prev = overlap_add[(cursor + j) % depth];
 
-						int L_size = B;
-						if (B + L_ > (L - 1)) {
-							L_size = (L - 1) - L_;
+						int offset = B;
+						auto L_prev = N_prev.begin() + (j - 1) * B;
+						if (std::distance(L_prev, N_prev.end()) < B) {
+							offset = std::distance(L_prev, N_prev.end());
 						}
-						L_ += B;
-
-						auto L_prev = N_prev.end() - (j - 1) * B - L_size;
-						std::transform(L_prev, L_prev + L_size, B_, B_, [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs + rhs; });
+						std::transform(L_prev, L_prev + offset, B_, B_, [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs + rhs; });
 					}
 
 					--cursor %= depth;
