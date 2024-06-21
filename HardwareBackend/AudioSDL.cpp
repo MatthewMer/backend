@@ -226,7 +226,7 @@ namespace Backend {
 				virt_channels = _virt_audio_info->channels;
 
 				r_buffer = reverb_buffer((int)(delay * sampling_rate), decay);
-				low_pass_distance = fir_filter(sampling_rate, 3000, 100, false, buff_size);
+				low_pass_distance = fir_filter(sampling_rate, 3000, 500, false, buff_size);
 				dist_buffer = std::vector<std::complex<float>>(buff_size);
 
 				// determine required buffer sizes
