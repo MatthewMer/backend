@@ -53,13 +53,14 @@ namespace Backend {
 			{
 				fn_window_sinc(frequency_response, _sampling_rate, _f_cutoff, _f_transition, _high_pass);
 				L = frequency_response.size();
-				N = to_power_of_two(L + B - 1);
-				frequency_response.resize(N);
+				N = L + B - 1;
+				int N_ = to_power_of_two(N);
+				frequency_response.resize(N_);
 				fft::perform_fft(frequency_response);
 
-				depth = (int)std::ceil((float)N / B);
+				depth = (int)std::ceil((float)N_ / B);
 				overlap_add.resize(depth);
-				size_t size = N;
+				size_t size = N_;
 				std::for_each(overlap_add.begin(), overlap_add.end(), [&size](std::vector<std::complex<float>>& _in) { _in.resize(size); });
 			}
 
@@ -76,17 +77,12 @@ namespace Backend {
 					std::transform(N_cur.begin(), N_cur.end(), frequency_response.begin(), N_cur.begin(), [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs * rhs; });
 					fft::perform_ifft(N_cur);
 
-					std::copy(B_, B_ + B, N_cur.begin());
-					for (int j = 1; j < depth; j++) {
-						auto& N_prev = overlap_add[(cursor + j) % depth];
+					std::copy(N_cur.begin(), N_cur.begin() + B, B_);
+					auto& N_prev = overlap_add[(cursor + 1) % depth];
 
-						int offset = B;
-						auto L_prev = N_prev.begin() + (j - 1) * B;
-						if (std::distance(L_prev, N_prev.end()) < B) {
-							offset = std::distance(L_prev, N_prev.end());
-						}
-						std::transform(L_prev, L_prev + offset, B_, B_, [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs + rhs; });
-					}
+					int offset = L - 1;
+					auto L_prev = N_prev.begin() + N - offset;
+					std::transform(L_prev, L_prev + offset, B_, B_, [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs + rhs; });
 
 					--cursor %= depth;
 				}
