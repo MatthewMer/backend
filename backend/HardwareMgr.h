@@ -61,7 +61,7 @@ namespace Backend {
 		static void NextFrame();
 		static void RenderFrame();
 
-		static void UpdateTexture();
+		static void UpdateTexture2d();
 		static void SetFramerateTarget(const int& _target, const bool& _unlimited);
 		static void SetSwapchainSettings(bool& _present_mode_fifo, bool& _triple_buffering);
 		static void ToggleFullscreen();

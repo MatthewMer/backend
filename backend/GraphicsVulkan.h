@@ -111,7 +111,7 @@ namespace Backend {
 			void NextFrameImGui() const override;
 
 			// update 3d/2d data
-			void UpdateGpuData() override;
+			void UpdateTexture2d() override;
 
 			void SetSwapchainSettings(bool& _present_mode_fifo, bool& _triple_buffering) override;
 

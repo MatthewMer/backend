@@ -207,8 +207,8 @@ namespace Backend {
 		graphicsMgr->RenderFrame();
 	}
 
-	void HardwareMgr::UpdateTexture() {
-		graphicsMgr->UpdateTexture();
+	void HardwareMgr::UpdateTexture2d() {
+		graphicsMgr->UpdateTexture2d();
 	}
 
 	void HardwareMgr::ToggleFullscreen() {

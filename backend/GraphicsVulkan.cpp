@@ -590,7 +590,7 @@ namespace Backend {
 			tex2dData.scale_matrix = glm::scale(glm::mat4(1.f), glm::vec3(tex2dData.scale_x, tex2dData.scale_y, 1.f));
 		}
 
-		void GraphicsVulkan::UpdateGpuData() {
+		void GraphicsVulkan::UpdateTexture2d() {
 			(this->*updateFunction)();
 		}
 

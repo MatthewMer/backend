@@ -5,8 +5,8 @@
 
 namespace Backend {
 	namespace Audio {
-		size_t to_power_of_two(const size_t& _in) {
-			return (size_t)pow(2, (int)std::ceil(log2(_in)));
+		int to_power_of_two(const int& _in) {
+			return (int)pow(2, (int)std::ceil(log2(_in)));
 		}
 
 		void sort(std::complex<float>* _data, int _N) {
@@ -86,8 +86,8 @@ namespace Backend {
 		void fft::perform_ifft(std::vector<std::complex<float>>& _samples) {
 			ifft_cooley_tukey(_samples.data(), (int)_samples.size());
 
-			int divisor = (int)_samples.size();
-			std::transform(_samples.begin(), _samples.end(), _samples.begin(), [&divisor](std::complex<float>& val) { return val /= divisor; });
+			float divisor = (float)_samples.size();
+			std::transform(_samples.begin(), _samples.end(), _samples.begin(), [&divisor](std::complex<float>& val) { return val /= std::complex<float>(divisor, .0f); });
 		}
 
 		void fft::ifft_cooley_tukey(std::complex<float>* _data, const int& _N) {

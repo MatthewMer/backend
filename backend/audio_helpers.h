@@ -12,7 +12,7 @@ using std::swap;
 
 namespace Backend {
 	namespace Audio {
-		size_t to_power_of_two(const size_t& _in);
+		int to_power_of_two(const int& _in);
 
 		void window_tukey(std::complex<float>* _samples, const int& _N);
 		void window_hamming(std::complex<float>* _samples, const int& _N);
@@ -52,7 +52,7 @@ namespace Backend {
 				: sampling_rate(_sampling_rate), f_cutoff(_f_cutoff), f_transition(_f_transition), high_pass(_high_pass), B(_block_size)
 			{
 				fn_window_sinc(frequency_response, _sampling_rate, _f_cutoff, _f_transition, _high_pass);
-				L = frequency_response.size();
+				L = (int)frequency_response.size();
 				N = L + B - 1;
 				int N_ = to_power_of_two(N);
 				frequency_response.resize(N_);

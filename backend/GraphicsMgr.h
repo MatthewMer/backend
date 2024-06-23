@@ -76,7 +76,7 @@ namespace Backend {
 			virtual void DestroyImgui() = 0;
 			virtual void NextFrameImGui() const = 0;
 
-			virtual void UpdateGpuData() = 0;
+			virtual void UpdateTexture2d() = 0;
 
 			bool InitGraphicsBackend(virtual_graphics_information& _graphics_info);
 			void DestroyGraphicsBackend();
