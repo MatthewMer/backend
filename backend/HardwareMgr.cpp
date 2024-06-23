@@ -183,8 +183,8 @@ namespace Backend {
 		graphicsMgr->DestroyGraphicsBackend();
 	}
 
-	void HardwareMgr::GetGraphicsSettings(graphics_settings _graphics_settings) {
-		_graphics_settings = graphicsSettings;
+	graphics_settings HardwareMgr::GetGraphicsSettings() {
+		return graphicsSettings;
 	}
 
 	bool HardwareMgr::CheckFrame() {
@@ -277,8 +277,8 @@ namespace Backend {
 		audioMgr->DestroyAudioBackend();
 	}
 
-	void HardwareMgr::GetAudioSettings(audio_settings _audio_settings) {
-		_audio_settings = audioSettings;
+	audio_settings HardwareMgr::GetAudioSettings() {
+		return audioSettings;
 	}
 
 	void HardwareMgr::SetSamplingRate(int& _sampling_rate) {

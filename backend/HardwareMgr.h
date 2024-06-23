@@ -55,7 +55,7 @@ namespace Backend {
 		static void InitGraphicsBackend(virtual_graphics_information& _virt_graphics_info);
 		static void DestroyGraphicsBackend();
 
-		static void GetGraphicsSettings(graphics_settings _graphics_settings);
+		static graphics_settings GetGraphicsSettings();
 
 		static bool CheckFrame();
 		static void NextFrame();
@@ -72,7 +72,7 @@ namespace Backend {
 		static void InitAudioBackend(virtual_audio_information& _virt_audio_info);
 		static void DestroyAudioBackend();
 
-		static void GetAudioSettings(audio_settings _audio_settings);
+		static audio_settings GetAudioSettings();
 		
 		static void SetSamplingRate(int& _sampling_rate);
 		static void SetVolume(const float& _volume, const float& _lfe);
