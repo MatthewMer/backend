@@ -7,11 +7,13 @@ using namespace std::chrono;
 
 namespace Backend {
 	HardwareMgr* HardwareMgr::instance = nullptr;
-	u32 HardwareMgr::errors = 0x00000000;
+	HW_ERROR HardwareMgr::error = HW_ERROR::NONE;
+
 	Graphics::GraphicsMgr* HardwareMgr::graphicsMgr = nullptr;
 	Audio::AudioMgr* HardwareMgr::audioMgr = nullptr;
 	Control::ControlMgr* HardwareMgr::controlMgr = nullptr;
 	Network::NetworkMgr* HardwareMgr::networkMgr = nullptr;
+
 	SDL_Window* HardwareMgr::window = nullptr;
 
 	graphics_settings HardwareMgr::graphicsSettings = {};
@@ -27,16 +29,19 @@ namespace Backend {
 
 	u32 HardwareMgr::currentMouseMove = 0;
 
-#define HWMGR_SECOND	999
+	inline const u32 ONE_SECOND = 999;
 
-	u8 HardwareMgr::InitHardware(graphics_settings& _graphics_settings, audio_settings& _audio_settings, control_settings& _control_settings) {
-		errors = 0;
+	/* *************************************************************************************************
+		INIT / DEINIT HARDWARE BACKEND
+	************************************************************************************************* */
+	void HardwareMgr::InitHardware(graphics_settings& _graphics_settings, audio_settings& _audio_settings, control_settings& _control_settings) {
+		error = HW_ERROR::NONE;
 
 		if (instance == nullptr) {
 			instance = new HardwareMgr();
 		} else {
-			errors |= HWMGR_ERR_ALREADY_RUNNING;
-			return errors;
+			error = HW_ERROR::ALREADY_RUNNING;
+			return;
 		}
 
 		audioSettings = _audio_settings;
@@ -45,16 +50,17 @@ namespace Backend {
 
 		SetFramerateTarget(graphicsSettings.framerateTarget, graphicsSettings.fpsUnlimited);
 
-		// sdl
+		// sdl init
 		window = nullptr;
 		if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_TIMER | SDL_INIT_GAMECONTROLLER | SDL_INIT_AUDIO) != 0) {
 			LOG_ERROR("[SDL]", SDL_GetError());
-			return false;
+			error = HW_ERROR::SDL_WINDOW_INIT;
+			return;
 		} else {
 			LOG_INFO("[SDL] initialized");
 		}
 
-		// graphics
+		// graphics init
 		graphicsMgr = Graphics::GraphicsMgr::getInstance(&window, graphicsSettings);
 		if (graphicsMgr != nullptr) {
 			const char* file_c = graphicsSettings.icon.c_str();
@@ -62,40 +68,54 @@ namespace Backend {
 
 			SDL_SetWindowIcon(window, icon);
 
-			if (!graphicsMgr->InitGraphics()) { return false; }
-			if (!graphicsMgr->StartGraphics(graphicsSettings.presentModeFifo, graphicsSettings.tripleBuffering)) { return false; }
+			if (!graphicsMgr->InitGraphics()) { 
+				error = HW_ERROR::GRAPHICS_INIT;
+				return;
+			}
+			if (!graphicsMgr->StartGraphics(graphicsSettings.presentModeFifo, graphicsSettings.tripleBuffering)) {
+				error = HW_ERROR::GRAPHICS_START;
+				return;
+			}
 
 			ImGui::CreateContext();
 			ImGui::StyleColorsDark();
-			if (!graphicsMgr->InitImgui()) { return false; }
+			if (!graphicsMgr->InitImgui()) { 
+				error = HW_ERROR::IMGUI_INIT;
+				return;
+			}
 
 			graphicsMgr->EnumerateShaders();
 		} else {
-			return false;
+			error = HW_ERROR::GRAPHICS_INSTANCE;
+			return;
 		}
 
 		SDL_SetWindowMinimumSize(window, graphicsSettings.win_width_min, graphicsSettings.win_height_min);
 
-		// audio
+		// audio init
 		audioMgr = Audio::AudioMgr::getInstance();
 		if (audioMgr != nullptr) {
 			audioMgr->InitAudio(audioSettings, false);
 		} else {
-			return false;
+			error = HW_ERROR::AUDIO_INSTANCE;
+			return;
 		}
 
-		// control
+		// control inti
 		controlMgr = Control::ControlMgr::getInstance();
 		if (controlMgr != nullptr) {
 			controlMgr->InitControl(controlSettings);
 		} else {
-			return false;
+			error = HW_ERROR::CONTROL_INSTANCE;
+			return;
 		}
 
+		// network init
 		networkMgr = Network::NetworkMgr::getInstance();
-		if (networkMgr == nullptr) { return false; }
-
-		return true;
+		if (networkMgr == nullptr) { 
+			error = HW_ERROR::NETWORK_INSTANCE;
+			return;
+		}
 	}
 
 	void HardwareMgr::ShutdownHardware() {
@@ -111,71 +131,13 @@ namespace Backend {
 		SDL_Quit();
 	}
 
-	void HardwareMgr::NextFrame() {
-		graphicsMgr->NextFrameImGui();
-		ImGui_ImplSDL2_NewFrame();
-		ImGui::NewFrame();
+	HW_ERROR HardwareMgr::GetError() {
+		return error;
 	}
 
-	void HardwareMgr::RenderFrame() {
-		graphicsMgr->RenderFrame();
-	}
-
-	void HardwareMgr::ProcessEvents(bool& _running) {
-		controlMgr->ProcessEvents(_running, window);
-	}
-
-	std::queue<std::pair<SDL_Keycode, bool>>& HardwareMgr::GetKeyQueue() {
-		return controlMgr->GetKeyQueue();
-	}
-
-	std::queue<std::tuple<int, SDL_GameControllerButton, bool>>& HardwareMgr::GetButtonQueue() {
-		return controlMgr->GetButtonQueue();
-	}
-
-	Sint32 HardwareMgr::GetScroll() {
-		return controlMgr->GetScroll();
-	}
-
-	void HardwareMgr::ToggleFullscreen() {
-		if (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) {
-			SDL_SetWindowFullscreen(window, 0);
-		} else {
-			SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
-		}
-	}
-
-	void HardwareMgr::InitGraphicsBackend(virtual_graphics_information& _virt_graphics_info) {
-		graphicsMgr->InitGraphicsBackend(_virt_graphics_info);
-	}
-
-	void HardwareMgr::InitAudioBackend(virtual_audio_information& _virt_audio_info) {
-		audioMgr->InitAudioBackend(_virt_audio_info);
-	}
-
-	void HardwareMgr::DestroyGraphicsBackend() {
-		graphicsMgr->DestroyGraphicsBackend();
-	}
-
-	void HardwareMgr::DestroyAudioBackend() {
-		audioMgr->DestroyAudioBackend();
-	}
-
-	void HardwareMgr::UpdateGpuData() {
-		graphicsMgr->UpdateGpuData();
-	}
-
-	void HardwareMgr::SetFramerateTarget(const int& _target, const bool& _unlimited) {
-		graphicsSettings.fpsUnlimited = _unlimited;
-		graphicsSettings.framerateTarget = _target;
-
-		if (graphicsSettings.framerateTarget > 0) {
-			timePerFrame = std::chrono::milliseconds((u32)(((1.f * pow(10, 3)) / graphicsSettings.framerateTarget)));
-		} else {
-			timePerFrame = std::chrono::milliseconds(0);
-		}
-	}
-
+	/* *************************************************************************************************
+		HARDWARE EVENTS PROCESSING
+	************************************************************************************************* */
 	void HardwareMgr::ProcessTimedEvents() {
 		steady_clock::time_point cur = steady_clock::now();
 		u32 time_diff = (u32)duration_cast<milliseconds>(cur - timePointCur).count();
@@ -202,12 +164,27 @@ namespace Backend {
 			if (controlMgr->CheckMouseMove(x, y)) {
 				if (!visible) { controlMgr->SetMouseVisible(true); }
 				currentMouseMove = 0;
-			} else if (visible && currentMouseMove < HWMGR_SECOND * 2) {
+			} else if (visible && currentMouseMove < ONE_SECOND * 2) {
 				currentMouseMove += time_diff;
 			} else {
 				controlMgr->SetMouseVisible(false);
 			}
 		}
+	}
+
+	/* *************************************************************************************************
+		GRAPHICS BACKEND
+	************************************************************************************************* */
+	void HardwareMgr::InitGraphicsBackend(virtual_graphics_information& _virt_graphics_info) {
+		graphicsMgr->InitGraphicsBackend(_virt_graphics_info);
+	}
+
+	void HardwareMgr::DestroyGraphicsBackend() {
+		graphicsMgr->DestroyGraphicsBackend();
+	}
+
+	void HardwareMgr::GetGraphicsSettings(graphics_settings _graphics_settings) {
+		_graphics_settings = graphicsSettings;
 	}
 
 	bool HardwareMgr::CheckFrame() {
@@ -220,12 +197,88 @@ namespace Backend {
 		}
 	}
 
-	void HardwareMgr::GetGraphicsSettings(graphics_settings& _graphics_settings) {
-		_graphics_settings = graphicsSettings;
+	void HardwareMgr::NextFrame() {
+		graphicsMgr->NextFrameImGui();
+		ImGui_ImplSDL2_NewFrame();
+		ImGui::NewFrame();
+	}
+
+	void HardwareMgr::RenderFrame() {
+		graphicsMgr->RenderFrame();
+	}
+
+	void HardwareMgr::UpdateTexture() {
+		graphicsMgr->UpdateTexture();
+	}
+
+	void HardwareMgr::ToggleFullscreen() {
+		if (SDL_GetWindowFlags(window) & SDL_WINDOW_FULLSCREEN) {
+			SDL_SetWindowFullscreen(window, 0);
+		} else {
+			SDL_SetWindowFullscreen(window, SDL_WINDOW_FULLSCREEN_DESKTOP);
+		}
 	}
 
 	void HardwareMgr::SetSwapchainSettings(bool& _present_mode_fifo, bool& _triple_buffering) {
 		graphicsMgr->SetSwapchainSettings(_present_mode_fifo, _triple_buffering);
+	}
+
+	void HardwareMgr::SetFramerateTarget(const int& _target, const bool& _unlimited) {
+		graphicsSettings.fpsUnlimited = _unlimited;
+		graphicsSettings.framerateTarget = _target;
+
+		if (graphicsSettings.framerateTarget > 0) {
+			timePerFrame = std::chrono::milliseconds((u32)(((1.f * pow(10, 3)) / graphicsSettings.framerateTarget)));
+		} else {
+			timePerFrame = std::chrono::milliseconds(0);
+		}
+	}
+
+	ImFont* HardwareMgr::GetFont(const int& _index) {
+		return graphicsMgr->GetFont(_index);
+	}
+
+	/* *************************************************************************************************
+		CONTROL BACKEND
+	************************************************************************************************* */
+	void HardwareMgr::ProcessEvents(bool& _running) {
+		controlMgr->ProcessEvents(_running, window);
+	}
+
+	std::queue<std::pair<SDL_Keycode, bool>>& HardwareMgr::GetKeyQueue() {
+		return controlMgr->GetKeyQueue();
+	}
+
+	std::queue<std::tuple<int, SDL_GameControllerButton, bool>>& HardwareMgr::GetButtonQueue() {
+		return controlMgr->GetButtonQueue();
+	}
+
+	Sint32 HardwareMgr::GetScroll() {
+		return controlMgr->GetScroll();
+	}
+
+	void HardwareMgr::SetMouseAlwaysVisible(const bool& _visible) {
+		controlSettings.mouse_always_visible = _visible;
+		currentMouseMove = 0;
+
+		if (_visible) {
+			controlMgr->SetMouseVisible(true);
+		}
+	}
+
+	/* *************************************************************************************************
+		AUDIO BACKEND
+	************************************************************************************************* */
+	void HardwareMgr::InitAudioBackend(virtual_audio_information& _virt_audio_info) {
+		audioMgr->InitAudioBackend(_virt_audio_info);
+	}
+
+	void HardwareMgr::DestroyAudioBackend() {
+		audioMgr->DestroyAudioBackend();
+	}
+
+	void HardwareMgr::GetAudioSettings(audio_settings _audio_settings) {
+		_audio_settings = audioSettings;
 	}
 
 	void HardwareMgr::SetSamplingRate(int& _sampling_rate) {
@@ -247,23 +300,13 @@ namespace Backend {
 		audioMgr->SetReverb(_delay, _decay);
 	}
 
-	void HardwareMgr::GetAudioSettings(audio_settings& _audio_settings) {
-		_audio_settings = audioSettings;
+	void HardwareMgr::SetAudioChannels(const bool& _high, const bool& _low) {
+		audioMgr->SetAudioChannels(_high, _low);
 	}
 
-	void HardwareMgr::SetMouseAlwaysVisible(const bool& _visible) {
-		controlSettings.mouse_always_visible = _visible;
-		currentMouseMove = 0;
-
-		if (_visible) {
-			controlMgr->SetMouseVisible(true);
-		}
-	}
-
-	ImFont* HardwareMgr::GetFont(const int& _index) {
-		return graphicsMgr->GetFont(_index);
-	}
-
+	/* *************************************************************************************************
+		NETWORK BACKEND
+	************************************************************************************************* */
 	void HardwareMgr::OpenNetwork(network_settings& _network_settings) {
 		networkSettings = _network_settings;
 
@@ -276,9 +319,5 @@ namespace Backend {
 
 	void HardwareMgr::CloseNetwork() {
 		networkMgr->ShutdownSocket();
-	}
-
-	void HardwareMgr::SetFrequencies(const bool& _high, const bool& _low) {
-		audioMgr->SetFrequencies(_high, _low);
 	}
 }

@@ -101,7 +101,7 @@ namespace Backend {
 			void SetVolume(const float& _volume, const float& _lfe);
 			void SetReverb(const float& _delay, const float& _decay);
 
-			void SetFrequencies(const bool& _high, const bool& _low);
+			void SetAudioChannels(const bool& _high, const bool& _low);
 
 			// clone/assign protection
 			AudioMgr(AudioMgr const&) = delete;

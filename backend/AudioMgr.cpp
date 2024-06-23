@@ -43,7 +43,7 @@ namespace Backend {
 			audioInfo.settings_changed.store(true);
 		}
 
-		void AudioMgr::SetFrequencies(const bool& _high, const bool& _low) {
+		void AudioMgr::SetAudioChannels(const bool& _high, const bool& _low) {
 			audioInfo.high_frequency.store(_high);
 			audioInfo.low_frequency.store(_low);
 			audioInfo.settings_changed.store(true);

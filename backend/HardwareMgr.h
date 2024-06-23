@@ -24,82 +24,100 @@
 #include "FileMapper.h"
 #endif
 
-#define HWMGR_ERR_ALREADY_RUNNING		0x00000001
-
 namespace Backend {
+	enum HW_ERROR {
+		NONE =					0x0000,
+		ALREADY_RUNNING =		0x0001,
+		GENERAL_ERROR =			0x0002,
+		SDL_WINDOW_INIT =		0x0003,
+		GRAPHICS_INIT =			0x0004,
+		GRAPHICS_START =		0x0005,
+		IMGUI_INIT =			0x0006,
+		GRAPHICS_INSTANCE =		0x0007,
+		AUDIO_INSTANCE =		0x0008,
+		CONTROL_INSTANCE =		0x0009,
+		NETWORK_INSTANCE =		0x000A,
+	};
+
 	class HardwareMgr {
 	public:
-		static u8 InitHardware(graphics_settings& _graphics_settings, audio_settings& _audio_settings, control_settings& _control_settings);
+		// Hardware manager general member methods
+		static void InitHardware(graphics_settings& _graphics_settings, audio_settings& _audio_settings, control_settings& _control_settings);
 		static void ShutdownHardware();
+		static HW_ERROR GetError();
+
+		static void ProcessEvents(bool& _running);
+		static void ProcessTimedEvents();
+		static Sint32 GetScroll();
+		static void SetMouseAlwaysVisible(const bool& _visible);
+
+		// Graphics backend
+		static void InitGraphicsBackend(virtual_graphics_information& _virt_graphics_info);
+		static void DestroyGraphicsBackend();
+
+		static void GetGraphicsSettings(graphics_settings _graphics_settings);
+
+		static bool CheckFrame();
 		static void NextFrame();
 		static void RenderFrame();
-		static void ProcessEvents(bool& _running);
-		static void ToggleFullscreen();
 
-		static void InitGraphicsBackend(virtual_graphics_information& _virt_graphics_info);
-		static void InitAudioBackend(virtual_audio_information& _virt_audio_info);
-		static void DestroyGraphicsBackend();
-		static void DestroyAudioBackend();
-
-		static void UpdateGpuData();
-
-		static Sint32 GetScroll();
-
-		static void GetGraphicsSettings(graphics_settings& _graphics_settings);
-
+		static void UpdateTexture();
 		static void SetFramerateTarget(const int& _target, const bool& _unlimited);
-
 		static void SetSwapchainSettings(bool& _present_mode_fifo, bool& _triple_buffering);
-
-		static void SetSamplingRate(int& _sampling_rate);
-
-		static void SetVolume(const float& _volume, const float& _lfe);
-		static void SetReverb(const float& _delay, const float& _decay);
-
-		static void GetAudioSettings(audio_settings& _audio_settings);
-
-		static void ProcessTimedEvents();
-
-		static std::queue<std::pair<SDL_Keycode, bool>>& GetKeyQueue();
-		static std::queue<std::tuple<int, SDL_GameControllerButton, bool>>& GetButtonQueue();
-
-		static void SetMouseAlwaysVisible(const bool& _visible);
+		static void ToggleFullscreen();
 
 		static ImFont* GetFont(const int& _index);
 
+		// Audio backend
+		static void InitAudioBackend(virtual_audio_information& _virt_audio_info);
+		static void DestroyAudioBackend();
+
+		static void GetAudioSettings(audio_settings _audio_settings);
+		
+		static void SetSamplingRate(int& _sampling_rate);
+		static void SetVolume(const float& _volume, const float& _lfe);
+		static void SetReverb(const float& _delay, const float& _decay);
+		static void SetAudioChannels(const bool& _high, const bool& _low);
+
+		// Network backend
 		static void OpenNetwork(network_settings& _network_settings);
 		static bool CheckNetwork();
 		static void CloseNetwork();
-
-		static void SetFrequencies(const bool& _high, const bool& _low);
-
-		static bool CheckFrame();
+		
+		// Control backend / key presses
+		static std::queue<std::pair<SDL_Keycode, bool>>& GetKeyQueue();
+		static std::queue<std::tuple<int, SDL_GameControllerButton, bool>>& GetButtonQueue();
 
 	private:
 		HardwareMgr() = default;
 		~HardwareMgr() {
 			ShutdownHardware();
 
-			Backend::Graphics::GraphicsMgr::resetInstance();
-			Backend::Audio::AudioMgr::resetInstance();
-			Backend::Control::ControlMgr::resetInstance();
+			graphicsMgr->resetInstance();
+			audioMgr->resetInstance();
+			controlMgr->resetInstance();
+			networkMgr->resetInstance();
 		}
 
+		// instances for backend components
 		static Backend::Graphics::GraphicsMgr* graphicsMgr;
 		static Backend::Audio::AudioMgr* audioMgr;
 		static Backend::Control::ControlMgr* controlMgr;
 		static Backend::Network::NetworkMgr* networkMgr;
+
 		static SDL_Window* window;
 
+		// different settings structs passed on init
 		static graphics_settings graphicsSettings;
 		static audio_settings audioSettings;
 		static control_settings controlSettings;
 		static network_settings networkSettings;
 
+		// HardwareMgr itself
 		static HardwareMgr* instance;
-		static u32 errors;
+		static HW_ERROR error;
 
-		// for framerate target
+		// framerate and timed events
 		static std::mutex mutTimeDelta;
 		static std::condition_variable  notifyTimeDelta;
 		static std::chrono::milliseconds timePerFrame;
