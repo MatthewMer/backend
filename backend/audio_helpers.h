@@ -12,13 +12,28 @@ using std::swap;
 
 namespace Backend {
 	namespace Audio {
+		/* *************************************************************************************************
+			RETURNS THE NEXT POWER OF 2, IF IT WAS ALREADY A POWER OF 2 THE SAME VALUE IS RETURNED
+		************************************************************************************************* */
 		int to_power_of_two(const int& _in);
 
+		/* *************************************************************************************************
+			WINDOWING FUNCTIONS FOR MAKING SIGNAL "PERIODIC" FOR A GIVEN SEQUENCE 
+			(BECOMING 0 AT THE BEGINNING AND THE END)
+		************************************************************************************************* */
 		void window_tukey(std::complex<float>* _samples, const int& _N);
 		void window_hamming(std::complex<float>* _samples, const int& _N);
 		void window_blackman(std::complex<float>* _samples, const int& _N);
+
+		/* *************************************************************************************************
+			CREATE A FILTER KERNEL (IMPULSE RESPONSE) USED TO CONVOLVE THE SIGNAL WITH
+			(FILTER SPECIFIC FREQUENCIES, E.G. ANYTHING FROM 3000HZ UPWARDS)
+		************************************************************************************************* */
 		void fn_window_sinc(std::vector<std::complex<float>>& _impulse_response, const int& _sampling_rate, const int& _f_cutoff, const int& _f_transtion, const bool& _high_pass);
 
+		/* *************************************************************************************************
+			STRUCT FOR PERFORMING A RADIX-2 FFT (REQUIRES SAMPLE COUNT POWER OF 2)
+		************************************************************************************************* */
 		struct fft {
 		public:
 			fft() = delete;
@@ -31,6 +46,9 @@ namespace Backend {
 			static void ifft_cooley_tukey(std::complex<float>* _data, const int& _N);
 		};
 
+		/* *************************************************************************************************
+			USED FOR HIGH- / LOW-PASS (FILTERING FREQUENCIES ABOVE / BELOW A CUTOFF FREQUENCY)
+		************************************************************************************************* */
 		// convolution in time domain corresponds to multiplication in frequency domain: as the convolution cancels out frequencies in the time domain that are not present (or have a very small magnitude) in the resulting signal, this logically is the same result as multiplying the frequencies in the frequency domain
 		struct fir_filter {
 			std::vector<std::complex<float>> frequency_response;
@@ -46,7 +64,10 @@ namespace Backend {
 			u32 B;
 			u32 L;
 			u32 N;
-	
+		
+			/* *************************************************************************************************
+				GENERATE FILTER KERNEL AND PREPARING BUFFERS FOR OVERLAPP ADD (TIME-ALIASING)
+			************************************************************************************************* */
 			fir_filter() = default;
 			fir_filter(const int& _sampling_rate, const int& _f_cutoff, const int& _f_transition, const bool& _high_pass, const u32& _block_size)
 				: sampling_rate(_sampling_rate), f_cutoff(_f_cutoff), f_transition(_f_transition), high_pass(_high_pass), B(_block_size)
@@ -64,8 +85,11 @@ namespace Backend {
 				std::for_each(overlap_add.begin(), overlap_add.end(), [&size](std::vector<std::complex<float>>& _in) { _in.resize(size); });
 			}
 
+			/* *************************************************************************************************
+				USE FFT TO FILTER FREQUENCIES OUT OF PASSED SAMMPLES OF A DISCRETE SIGNAL
+			************************************************************************************************* */
 			void apply(std::vector<std::complex<float>>& _X) {
-				for (int i = 0; i < _X.size() / B; i++) {
+				for (size_t i = 0; i < _X.size() / B; i++) {
 					auto B_ = _X.begin() + i * B;
 					auto& N_cur = overlap_add[cursor];
 

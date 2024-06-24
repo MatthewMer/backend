@@ -10,22 +10,46 @@
 
 namespace Backend {
 	namespace Audio {
-#define SOUND_MONO                  1
-#define SOUND_STEREO                2
-#define SOUND_5_1                   6
-#define SOUND_7_1                   8
-
-#define M_SPEED_OF_SOUND            343.2f  // m/s
-#define M_DISTANCE_EARS             0.2f    // m
-
-		const std::map<const char*, std::pair<int, int>> SAMPLING_RATES = {
-			{"22050 Hz", {22050, 512}},
-			{"44100 Hz", {44100, 512}},
-			{"48000 Hz", {48000, 512}},
-			{"88200 Hz", {88200, 1024}},
-			{"96000 Hz", {96000, 1024}}
+		/* *************************************************************************************************
+			ENUMS FOR SAMPLING RATE, SPEAKER SETUP (Surround 7.1, ...), USED BUFFER SIZE FOR SDL
+		************************************************************************************************* */
+		enum SPEAKER_SETUP {
+			SOUND_MONO = 1,
+			SOUND_STEREO = 2,
+			SOUND_5_1 = 6,
+			SOUND_7_1 = 8
 		};
 
+		enum SAMPLING_RATE {
+			SOUND_22050 = 22050,
+			SOUND_44100 = 44100,
+			SOUND_48000 = 48000,
+			SOUND_88200 = 88200,
+			SOUND_96000 = 96000
+		};
+
+		enum BUFFER_SIZE {
+			BUFFER_512 = 512,
+			BUFFER_1024 = 1024
+		};
+
+		const std::map<const char*, std::pair<SAMPLING_RATE, BUFFER_SIZE>> SAMPLING_RATES = {
+			{"22050 Hz", {SOUND_22050, BUFFER_512}},
+			{"44100 Hz", {SOUND_44100, BUFFER_512}},
+			{"48000 Hz", {SOUND_48000, BUFFER_512}},
+			{"88200 Hz", {SOUND_88200, BUFFER_1024}},
+			{"96000 Hz", {SOUND_96000, BUFFER_1024}}
+		};
+
+		/* *************************************************************************************************
+			GENERIC CONSTANTS USED BY THE AUDIO BACKEND
+		************************************************************************************************* */
+		inline const float M_SPEED_OF_SOUND = 343.2f;	// m/s
+		inline const float M_DISTANCE_EARS = 0.2f;		// m
+
+		/* *************************************************************************************************
+			ANGLES FOR THE PHYSICALLY PRESENT SPEAKERS
+		************************************************************************************************* */
 		const float SOUND_7_1_ANGLES[8] = {
 			337.5f * (float)(M_PI / 180.f),               // front-left
 			22.5f * (float)(M_PI / 180.f),                // front-right
@@ -51,6 +75,10 @@ namespace Backend {
 			90.f * (float)(M_PI / 180.f)                  // right
 		};
 
+		/* *************************************************************************************************
+			SAMPLES (RING BUFFER): AUDIO THREAD STORES GENERATED SAMPLES IN THE RING BUFFER AND THE
+			AUDIO CALLBACK TRANSFERS THEM TO THE BUFFER USED BY SDL
+		************************************************************************************************* */
 		struct audio_samples {
 			std::vector<float> buffer;
 			int buffer_size = 0;
@@ -58,18 +86,22 @@ namespace Backend {
 			int read_cursor = 0;
 			int write_cursor = 0;
 
-			std::condition_variable notifyBufferUpdate;
-			std::mutex mutBufferUpdate;
+			std::condition_variable cond_buffer_update;
+			std::mutex mut_buffer_update;
 		};
 
+		/* *************************************************************************************************
+			STRUCT FOR AUDIO SETUP INFORMATION USED BY THE AUDIO THREAD AND CHANGING SETTINGS 
+			DURING EXECUTION
+		************************************************************************************************* */
 		struct audio_information {
-			int channels_max = 0;
-			int sampling_rate_max = 0;
+			SPEAKER_SETUP channels_max = SOUND_7_1;
+			SAMPLING_RATE sampling_rate_max = SOUND_96000;
 
-			int channels = 0;
-			int sampling_rate = 0;
+			SPEAKER_SETUP channels = SOUND_STEREO;
+			SAMPLING_RATE sampling_rate = SOUND_44100;
 
-			int buff_size = 0;
+			BUFFER_SIZE buff_size = BUFFER_512;
 
 			void* device = nullptr;
 
@@ -85,17 +117,28 @@ namespace Backend {
 			alignas(64) std::atomic<bool> settings_changed = false;
 		};
 
+		/* *************************************************************************************************
+			AUDIO MGR: BASE CLASS FOR AudioSDL, etc. 
+		************************************************************************************************* */
 		class AudioMgr {
 		public:
-			// get/reset instance
+			/* *************************************************************************************************
+				GET / RESET SINGLETON INSTANCE
+			************************************************************************************************* */
 			static AudioMgr* getInstance();
 			static void resetInstance();
 
-			virtual void InitAudio(audio_settings& _audio_settings, const bool& _reinit) = 0;
+			/* *************************************************************************************************
+				INIT / DEINIT BACKEND, START / STOP FOR EMULATION
+			************************************************************************************************* */
+			virtual void InitAudioBackend(audio_settings& _audio_settings, const bool& _reinit) = 0;
 
-			virtual bool InitAudioBackend(virtual_audio_information& _virt_audio_info) = 0;
-			virtual void DestroyAudioBackend() = 0;
+			virtual bool StartAudioBackend(virtual_audio_information& _virt_audio_info) = 0;
+			virtual void StopAudioBackend() = 0;
 
+			/* *************************************************************************************************
+				SETTERS FOR AUDIO THREAD
+			************************************************************************************************* */
 			void SetSamplingRate(audio_settings& _audio_settings);
 
 			void SetVolume(const float& _volume, const float& _lfe);
@@ -103,35 +146,39 @@ namespace Backend {
 
 			void SetAudioChannels(const bool& _high, const bool& _low);
 
-			// clone/assign protection
+			/* *************************************************************************************************
+				CLONE / ASSIGN PROTECTION
+			************************************************************************************************* */
 			AudioMgr(AudioMgr const&) = delete;
 			AudioMgr(AudioMgr&&) = delete;
 			AudioMgr& operator=(AudioMgr const&) = delete;
 			AudioMgr& operator=(AudioMgr&&) = delete;
 
 		protected:
-			// constructor
-			explicit AudioMgr() {
-				int sampling_rate_max = 0;
-				for (const auto& [key, val] : SAMPLING_RATES) {
-					if (val.first > sampling_rate_max) { sampling_rate_max = val.first; }
-				}
-
-				audioInfo.channels_max = SOUND_7_1;
-				audioInfo.sampling_rate_max = sampling_rate_max;
-				audioInfo.channels = 0;
-				audioInfo.sampling_rate = 0;
-			}
+			/* *************************************************************************************************
+				CONSTRUCTOR
+			************************************************************************************************* */
+			explicit AudioMgr();
 			~AudioMgr() = default;
 
+			/* *************************************************************************************************
+				MEMBERS: NAME OF DEVICE, SAMPLES STRUCT, THE AUDIO THREAD FOR SAMPLE GENERATION
+				FOR EMULATION
+			************************************************************************************************* */
 			std::string name = "";
 			audio_samples audioSamples;
 			std::thread audioThread;
 
+			/* *************************************************************************************************
+				INFO STRUCTS FOR AUDIO THREAD
+			************************************************************************************************* */
 			audio_information audioInfo = {};
 			virtual_audio_information virtAudioInfo = {};
 
 		private:
+			/* *************************************************************************************************
+				THE AudioMgr INSTANCE
+			************************************************************************************************* */
 			static AudioMgr* instance;
 		};
 	}

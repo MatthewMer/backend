@@ -95,7 +95,7 @@ namespace Backend {
 		// audio init
 		audioMgr = Audio::AudioMgr::getInstance();
 		if (audioMgr != nullptr) {
-			audioMgr->InitAudio(audioSettings, false);
+			audioMgr->InitAudioBackend(audioSettings, false);
 		} else {
 			error = HW_ERROR::AUDIO_INSTANCE;
 			return;
@@ -269,12 +269,12 @@ namespace Backend {
 	/* *************************************************************************************************
 		AUDIO BACKEND
 	************************************************************************************************* */
-	void HardwareMgr::InitAudioBackend(virtual_audio_information& _virt_audio_info) {
-		audioMgr->InitAudioBackend(_virt_audio_info);
+	void HardwareMgr::StartAudioBackend(virtual_audio_information& _virt_audio_info) {
+		audioMgr->StartAudioBackend(_virt_audio_info);
 	}
 
-	void HardwareMgr::DestroyAudioBackend() {
-		audioMgr->DestroyAudioBackend();
+	void HardwareMgr::StopAudioBackend() {
+		audioMgr->StopAudioBackend();
 	}
 
 	audio_settings HardwareMgr::GetAudioSettings() {

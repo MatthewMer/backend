@@ -9,7 +9,7 @@ namespace Backend {
 		class AudioOpenAL : AudioMgr {
 		public:
 			friend class AudioMgr;
-			void InitAudio(audio_settings& _audio_settings, const bool& _reinit) override;
+			void InitAudioBackend(audio_settings& _audio_settings, const bool& _reinit) override;
 
 		protected:
 			AudioOpenAL() : AudioMgr() {}

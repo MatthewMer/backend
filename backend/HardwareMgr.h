@@ -69,8 +69,8 @@ namespace Backend {
 		static ImFont* GetFont(const int& _index);
 
 		// Audio backend
-		static void InitAudioBackend(virtual_audio_information& _virt_audio_info);
-		static void DestroyAudioBackend();
+		static void StartAudioBackend(virtual_audio_information& _virt_audio_info);
+		static void StopAudioBackend();
 
 		static audio_settings GetAudioSettings();
 		

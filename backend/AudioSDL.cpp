@@ -17,15 +17,48 @@ using namespace std;
 
 namespace Backend {
 	namespace Audio {
+		/* *************************************************************************************************
+			CONSTRUCTOR
+		************************************************************************************************* */
+		AudioSDL::AudioSDL() : AudioMgr() {
+			SDL_AudioSpec dev_props;
+			char* c_name;
+			SDL_GetDefaultAudioInfo(&c_name, &dev_props, 0);
+			name = std::string(c_name);
+
+			if (audioInfo.sampling_rate_max > dev_props.freq) {
+				audioInfo.sampling_rate_max = (SAMPLING_RATE)dev_props.freq;
+				audioInfo.sampling_rate = (SAMPLING_RATE)dev_props.freq;
+			} else {
+				audioInfo.sampling_rate = audioInfo.sampling_rate_max;
+			}
+
+			if (audioInfo.channels_max > dev_props.channels) {
+				audioInfo.channels_max = (SPEAKER_SETUP)dev_props.channels;
+				audioInfo.channels = (SPEAKER_SETUP)dev_props.channels;
+			} else {
+				audioInfo.channels = audioInfo.channels_max;
+			}
+
+			LOG_INFO("[SDL] ", name, " supports: ", std::format("{:d} channels @ {:d}Hz", dev_props.channels, dev_props.freq));
+		}
+
+		/* *************************************************************************************************
+			CALLBACK AND THREAD FUNCTIONS FOR THE AUDIO THREAD AND SDL BACKEND 
+			(GENERATE NEW SAMPLES STORED IN THE RING BUFFER, REQUEST NEW SAMPLES FOR THE RING BUFFER)
+		************************************************************************************************* */
 		void audio_callback(void* userdata, u8* _device_buffer, int _length);
 		void audio_thread(audio_information* _audio_info, virtual_audio_information* _virt_audio_info, audio_samples* _samples);
 
-		void AudioSDL::InitAudio(audio_settings& _audio_settings, const bool& _reinit) {
+		/* *************************************************************************************************
+			INIT BASIC AUDIO BACKEND FUNCTIONALITY
+		************************************************************************************************* */
+		void AudioSDL::InitAudioBackend(audio_settings& _audio_settings, const bool& _reinit) {
 			bool _reinit_backend = virtAudioInfo.audio_running.load();
 
 			if (_reinit) {
 				if (_reinit_backend) {
-					DestroyAudioBackend();
+					StopAudioBackend();
 				}
 				SDL_CloseAudioDevice(device);
 			}
@@ -53,9 +86,9 @@ namespace Backend {
 			device = SDL_OpenAudioDevice(nullptr, 0, &want, &have, 0);
 
 			// audio info (settings)
-			audioInfo.sampling_rate = have.freq;
-			audioInfo.channels = (int)have.channels;
-			audioInfo.buff_size = have.samples;
+			audioInfo.sampling_rate = (SAMPLING_RATE)have.freq;
+			audioInfo.channels = (SPEAKER_SETUP)have.channels;
+			audioInfo.buff_size = (BUFFER_SIZE)have.samples;
 
 			_audio_settings.sampling_rate = have.freq;
 			_audio_settings.sampling_rate_max = audioInfo.sampling_rate_max;
@@ -85,14 +118,17 @@ namespace Backend {
 			audioInfo.device = (void*)&device;
 
 			SDL_PauseAudioDevice(device, 0);
-			LOG_INFO("[SDL] ", name, " set: ", std::format("{:d} channels @ {:d}Hz", audioInfo.channels, audioInfo.sampling_rate));
+			LOG_INFO("[SDL] ", name, " set: ", std::format("{:d} channels @ {:d}Hz", (int)audioInfo.channels, (int)audioInfo.sampling_rate));
 
 			if (_reinit && _reinit_backend) {
-				InitAudioBackend(virtAudioInfo);
+				StartAudioBackend(virtAudioInfo);
 			}
 		}
 
-		bool AudioSDL::InitAudioBackend(virtual_audio_information& _virt_audio_info) {
+		/* *************************************************************************************************
+			START / STOP AUDIO BACKEND FOR EMULATION (GENERATE NEW SAMPLES FOR AUDIO BUFFER)
+		************************************************************************************************* */
+		bool AudioSDL::StartAudioBackend(virtual_audio_information& _virt_audio_info) {
 			virtAudioInfo = _virt_audio_info;
 			virtAudioInfo.audio_running.store(true);
 
@@ -105,9 +141,9 @@ namespace Backend {
 			}
 		}
 
-		void AudioSDL::DestroyAudioBackend() {
+		void AudioSDL::StopAudioBackend() {
 			virtAudioInfo.audio_running.store(false);
-			audioSamples.notifyBufferUpdate.notify_one();
+			audioSamples.cond_buffer_update.notify_one();
 			if (audioThread.joinable()) {
 				audioThread.join();
 			}
@@ -117,6 +153,14 @@ namespace Backend {
 			LOG_INFO("[SDL] audio backend stopped");
 		}
 
+		/* *************************************************************************************************
+			DIFFERENT BUFFERS AND ALGORITHMS FOR CREATING DIFFERENT AUDIO EFFECTS
+		************************************************************************************************* */
+
+		/* *************************************************************************************************
+			SIMULATES THE DIFFERENCE IN TIME A SIGNAL NEEDS TO TRAVEL TO THE RIGHT AND LEFT EAR
+			(not finished)
+		************************************************************************************************* */
 		struct delay_buffer {
 			std::vector<std::vector<float>> buffer;
 			int cursor = 0;
@@ -150,6 +194,9 @@ namespace Backend {
 			}
 		};
 
+		/* *************************************************************************************************
+			REPEATS SAMPLE DELAYED WHICH CREATES AN ECHO -> USED FOR AUDIO DEPTH
+		************************************************************************************************* */
 		struct reverb_buffer {
 			std::vector<float> buffer;
 			float decay = .0f;
@@ -175,6 +222,10 @@ namespace Backend {
 			}
 		};
 
+		/* *************************************************************************************************
+			SPEAKERS STRUCT THAT CONTAINS THE FUNCTIONALITY TO APPLY AUDIO EFFECTS TO A 
+			GIVEN SET OF SAMPLES AND OUTPUTTING THEM TO THE RING BUFFER FOR THE SDL CALLBACK
+		************************************************************************************************* */
 		struct speakers {
 			typedef void (speakers::* speaker_function)(float*, const float&, const float&, const float&);
 			speaker_function func;
@@ -269,9 +320,13 @@ namespace Backend {
 				}
 			}
 
+			/* *************************************************************************************************
+				GENERATE NEW SAMPLES REQUESTED BY THE SDL CALLBACK
+			************************************************************************************************* */
 			void process() {
 				if (audio_info->settings_changed.load()) {
-					set_volume(audio_info->master_volume.load(), audio_info->lfe.load());
+					volume = audio_info->master_volume.load();
+					lfe = audio_info->lfe.load();
 					reset_reverb(audio_info->delay.load(), audio_info->decay.load());
 					high_frequency = audio_info->high_frequency.load();
 					low_frequency = audio_info->low_frequency.load();
@@ -327,11 +382,9 @@ namespace Backend {
 				SDL_UnlockAudioDevice(*device);
 			}
 
-			void set_volume(const float& _volume, const float& _lfe) {
-				volume = _volume;
-				lfe = _lfe;
-			}
-
+			/* *************************************************************************************************
+				SETTERS FOR DIFFERENT BUFFERS USED DURING SAMPLE GENERATION
+			************************************************************************************************* */
 			void reset_reverb(const float& _delay, const float& _decay) {
 				r_buffer = reverb_buffer((int)(_delay * sampling_rate), _decay);
 			}
@@ -340,13 +393,15 @@ namespace Backend {
 			const float D = 1.2f;		// gain
 			const float a = 2.f;
 
-			// using angles in rad
+			/* *************************************************************************************************
+				DIFFERENT FUNCTIONS FOR SAMPLE OUTPUT DEPENDING ON THE PHYSICAL SPEAKER SETUP
+			************************************************************************************************* */
+			// using angles in rad -> translate samples to speaker depending the angle (direction)
 			// -> https://www.desmos.com/calculator/vpkgagyrhz?lang=de
 			float calc_sample(const float& _sample, const float& _sample_angle, const float& _speaker_angle) {
 				return tanh(D * _sample) * exp(a * .5f * cos(_sample_angle - _speaker_angle) - .5f);
 			}
 
-			// TODO: low frequency missing, probably use a low pass filter on all samples and combine and increase amplitude for output on low frequency channel
 			void samples_7_1_surround(float* _buffer, const float& _sample, const float& _angle, const float& _lfe) {
 				_buffer[0] += calc_sample(_sample, _angle, SOUND_7_1_ANGLES[0]);	// front-left
 				_buffer[1] += calc_sample(_sample, _angle, SOUND_7_1_ANGLES[1]);	// front-right
@@ -380,7 +435,12 @@ namespace Backend {
 			}
 		};
 
-		// _user_data: struct passed to audiospec, _device_buffer: the audio buffer snippet that needs to be filled, _length: length of this buffer snippet
+		/* *************************************************************************************************
+			CALLBACK AND THREAD FUNCTION FOR SDL CALLBACK AND SAMPLE GENERATION ON REQUEST OF SDL
+			_user_data: struct passed to audiospec
+			_device_buffer: the audio buffer snippet that needs to be filled
+			_length: length of this buffer snippet
+		************************************************************************************************* */
 		void audio_callback(void* _user_data, u8* _device_buffer, int _length) {
 			audio_samples* samples = (audio_samples*)_user_data;
 
@@ -406,7 +466,7 @@ namespace Backend {
 
 			samples->read_cursor = ((b_read_cursor + _length) % samples->buffer_size) / sizeof(float);
 
-			samples->notifyBufferUpdate.notify_one();
+			samples->cond_buffer_update.notify_one();
 		}
 
 		void audio_thread(audio_information* _audio_info, virtual_audio_information* _virt_audio_info, audio_samples* _samples) {
@@ -415,8 +475,8 @@ namespace Backend {
 			);
 
 			while (_virt_audio_info->audio_running.load()) {
-				std::unique_lock<mutex> lock_buffer(_samples->mutBufferUpdate);
-				_samples->notifyBufferUpdate.wait(lock_buffer);
+				std::unique_lock<mutex> lock_buffer(_samples->mut_buffer_update);
+				_samples->cond_buffer_update.wait(lock_buffer);
 
 				sp.process();
 			}

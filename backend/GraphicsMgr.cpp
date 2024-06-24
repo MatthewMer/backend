@@ -43,7 +43,12 @@ namespace Backend {
 		}
 
 		ImFont* GraphicsMgr::GetFont(const int& _index) {
-			if (fonts.size() > _index) { return fonts[_index]; } else { return nullptr; }
+			if (fonts.size() > (size_t)_index) { 
+				return fonts[_index]; 
+			} 
+			else { 
+				return nullptr; 
+			}
 		}
 	}
 }

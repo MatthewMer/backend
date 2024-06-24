@@ -10,6 +10,9 @@
 
 namespace Backend {
 	namespace Audio {
+		/* *************************************************************************************************
+			GET / RESET SINGLETON INSTANCE OF AudioMgr
+		************************************************************************************************* */
 		AudioMgr* AudioMgr::instance = nullptr;
 
 		AudioMgr* AudioMgr::getInstance() {
@@ -27,10 +30,31 @@ namespace Backend {
 			}
 		}
 
-		void AudioMgr::SetSamplingRate(audio_settings& _audio_settings) {
-			InitAudio(_audio_settings, true);
+		/* *************************************************************************************************
+			CONSTRUCTOR
+		************************************************************************************************* */
+		AudioMgr::AudioMgr() {
+			int sampling_rate_max = 0;
+			for (const auto& [key, val] : SAMPLING_RATES) {
+				if (val.first > sampling_rate_max) { sampling_rate_max = val.first; }
+			}
+
+			audioInfo.channels_max = SOUND_7_1;
+			audioInfo.sampling_rate_max = SOUND_96000;
+			audioInfo.channels = SOUND_STEREO;
+			audioInfo.sampling_rate = SOUND_44100;
 		}
 
+		/* *************************************************************************************************
+			SETTERS FOR BASIC AUDIO BACKEND
+		************************************************************************************************* */
+		void AudioMgr::SetSamplingRate(audio_settings& _audio_settings) {
+			InitAudioBackend(_audio_settings, true);
+		}
+
+		/* *************************************************************************************************
+			SETTERS FOR INFORMATION USED DURING EMULATION -> AUDIO THREAD AND CALLBACK
+		************************************************************************************************* */
 		void AudioMgr::SetVolume(const float& _volume, const float& _lfe) {
 			audioInfo.master_volume.store(_volume);
 			audioInfo.lfe.store(_lfe);

@@ -5,10 +5,18 @@
 
 namespace Backend {
 	namespace Audio {
+		/* *************************************************************************************************
+			RETURNS THE NEXT POWER OF 2, IF IT WAS ALREADY A POWER OF 2 THE SAME VALUE IS RETURNED
+		************************************************************************************************* */
 		int to_power_of_two(const int& _in) {
 			return (int)pow(2, (int)std::ceil(log2(_in)));
 		}
 
+		/* *************************************************************************************************
+			SORT FUNCTIONS USED FOR FFT:
+			SAMPLES AT EVEN INDICES PLACED IN THE RANGE 0 TO N/2-1
+			SAMPLES AT ODD INDICES PLACED IN THE RANGE N/2 TO N-1
+		************************************************************************************************* */
 		void sort(std::complex<float>* _data, int _N) {
 			if (_N == 2) { return; }
 			for (int n = 1; n < _N / 2; n += 2) {
@@ -49,6 +57,9 @@ namespace Backend {
 			X[k] = Σ (n=0 bis N-1) x[n] * exp(-i*2*pi * k * n / N) = Σ (n=0 bis N-1) x[n] * (cos(2*pi*k*n/N)-i*sin(2*pi*k*n/N))
 		*/
 
+		/* *************************************************************************************************
+			PERFORM A RADIX-2 (I)FFT (REQUIRES SAMPLE COUNT POWER OF 2) FOR A GIVEN DISCRETE SIGNAL
+		************************************************************************************************* */
 		// FFT based on Cooley-Tukey
 		// returns DFT (size of N) with the phases, magnitudes and frequencies in cartesian form (e.g. 3.5+2.6i)
 		// example in pseudo code: https://en.wikipedia.org/wiki/Cooley%E2%80%93Tukey_FFT_algorithm
@@ -114,6 +125,10 @@ namespace Backend {
 			}
 		}
 
+		/* *************************************************************************************************
+			WINDOWING FUNCTIONS FOR MAKING SIGNAL "PERIODIC" FOR A GIVEN SEQUENCE
+			(BECOMING 0 AT THE BEGINNING AND THE END)
+		************************************************************************************************* */
 		const float alpha = .0f;
 
 		// necessary, as it is impossible to assure that the sampled signal consists of exactly n periods (where n is an integer) and is continuous (doesn't matter in our application)
@@ -147,6 +162,10 @@ namespace Backend {
 			}
 		}
 
+		/* *************************************************************************************************
+			CREATE A FILTER KERNEL (IMPULSE RESPONSE) USED TO CONVOLVE THE SIGNAL WITH
+			(FILTER SPECIFIC FREQUENCIES, E.G. ANYTHING FROM 3000HZ UPWARDS)
+		************************************************************************************************* */
 		// produces a window-sinc filter kernel for a given cutoff frequency and transition bandwidth
 			// _cutoff < _sampling_rate / 2 && _cutoff > 0
 			// _transition < _sampling_rate / 2 && _transition > 0

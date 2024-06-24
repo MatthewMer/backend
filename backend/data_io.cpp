@@ -23,7 +23,7 @@ namespace Backend {
 
             for (size_t i = 0; i < path.size(); i++) {
                 string sub_path = "";
-                for (int j = 0; j <= i; j++) {
+                for (size_t j = 0; j <= i; j++) {
                     sub_path += path[j] + "/";
                 }
 
