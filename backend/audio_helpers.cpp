@@ -176,7 +176,7 @@ namespace Backend {
 			// https://ccrma.stanford.edu/~jos/sasp/Example_1_Low_Pass_Filtering.html
 			// http://doctord.webhop.net/Courses/textbooks/Smith_DSP/dsp_book_Ch16.pdf
 			// https://fiiir.com/
-		void fn_window_sinc(std::vector<std::complex<float>>& _impulse_response, const int& _sampling_rate, const int& _f_cutoff, const int& _f_transtion, const bool& _high_pass) {
+		void fn_window_sinc(std::vector<std::complex<float>>& _impulse_response, const int& _sampling_rate, const int& _f_cutoff, const TRANSITION_BANDWITH& _f_transtion, const bool& _high_pass) {
 			float fc = (_high_pass ? ((_sampling_rate / 2) - (float)_f_cutoff) / _sampling_rate : (float)_f_cutoff / _sampling_rate);
 			float BW = (float)_f_transtion / _sampling_rate;
 			int N = (int)std::ceil(4 / BW);

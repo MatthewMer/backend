@@ -106,13 +106,17 @@ namespace Backend {
 			void* device = nullptr;
 
 			alignas(64) std::atomic<float> master_volume = 1.f;
-			alignas(64) std::atomic<float> lfe = 1.f;
+			alignas(64) std::atomic<float> lfe_volume = 1.f;
+			alignas(64) std::atomic<float> base_volume = 1.f;
 
+			alignas(64) std::atomic<bool> dist_low_pass_enable = true;
 			alignas(64) std::atomic<float> delay = .02f;
 			alignas(64) std::atomic<float> decay = .1f;
 
-			alignas(64) std::atomic<bool> high_frequency = true;
-			alignas(64) std::atomic<bool> low_frequency = true;
+			alignas(64) std::atomic<bool> lfe_low_pass_enable = true;
+
+			alignas(64) std::atomic<bool> hf_channel_output = true;
+			alignas(64) std::atomic<bool> lfe_channel_output = true;
 
 			alignas(64) std::atomic<bool> settings_changed = false;
 		};
@@ -141,10 +145,10 @@ namespace Backend {
 			************************************************************************************************* */
 			void SetSamplingRate(audio_settings& _audio_settings);
 
-			void SetVolume(const float& _volume, const float& _lfe);
+			void SetVolume(const float& _volume, const float& _lfe_volume, const float& _base_volume);
 			void SetReverb(const float& _delay, const float& _decay);
-
-			void SetAudioChannels(const bool& _high, const bool& _low);
+			void SetAudioOutputEnable(const bool& _hf_output, const bool& _lfe_output);
+			void SetFilterEnable(const bool& _dist_low_pass, const bool& _lfe_low_pass);
 
 			/* *************************************************************************************************
 				CLONE / ASSIGN PROTECTION

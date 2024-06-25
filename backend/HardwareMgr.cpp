@@ -288,10 +288,11 @@ namespace Backend {
 		_sampling_rate = audioSettings.sampling_rate;
 	}
 
-	void HardwareMgr::SetVolume(const float& _volume, const float& _lfe) {
+	void HardwareMgr::SetVolume(const float& _volume, const float& _lfe, const float& _base) {
 		audioSettings.master_volume = _volume;
-		audioSettings.lfe = _volume;
-		audioMgr->SetVolume(_volume, _lfe);
+		audioSettings.lfe_volume = _volume;
+		audioSettings.base_volume = _base;
+		audioMgr->SetVolume(_volume, _lfe, _base);
 	}
 
 	void HardwareMgr::SetReverb(const float& _delay, const float& _decay) {
@@ -300,8 +301,16 @@ namespace Backend {
 		audioMgr->SetReverb(_delay, _decay);
 	}
 
-	void HardwareMgr::SetAudioChannels(const bool& _high, const bool& _low) {
-		audioMgr->SetAudioChannels(_high, _low);
+	void HardwareMgr::SetAudioOutputEnable(const bool& _hf_output, const bool& _lfe_output) {
+		audioSettings.hf_output_enable = _hf_output;
+		audioSettings.lfe_output_enable = _lfe_output;
+		audioMgr->SetAudioOutputEnable(_hf_output, _lfe_output);
+	}
+
+	void HardwareMgr::SetFilterEnable(const bool& _dist_low_pass, const bool& _lfe_low_pass) {
+		audioSettings.dist_low_pass_enable = _dist_low_pass;
+		audioSettings.lfe_low_pass_enable = _lfe_low_pass;
+		audioMgr->SetFilterEnable(_dist_low_pass, _lfe_low_pass);
 	}
 
 	/* *************************************************************************************************

@@ -55,12 +55,15 @@ namespace Backend {
 	struct audio_settings {
 		int sampling_rate = 0;
 		float master_volume = 0;
-		float lfe = 0;
+		float lfe_volume = 0;
+		float base_volume = 0;
 		float delay = 0;
 		float decay = 0;
 		int sampling_rate_max = 0;
-		bool high_frequencies = true;
-		bool low_frequencies = true;
+		bool hf_output_enable = true;
+		bool lfe_output_enable = true;
+		bool lfe_low_pass_enable = true;
+		bool dist_low_pass_enable = true;
 	};
 
 	struct control_settings {

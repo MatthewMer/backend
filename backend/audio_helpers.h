@@ -13,7 +13,16 @@ using std::swap;
 namespace Backend {
 	namespace Audio {
 		/* *************************************************************************************************
-			RETURNS THE NEXT POWER OF 2, IF IT WAS ALREADY A POWER OF 2 THE SAME VALUE IS RETURNED
+			ENUMS FOR FILTERS
+		************************************************************************************************* */
+		enum TRANSITION_BANDWITH {
+			BW_750 = 750,
+			BW_1500 = 1500,
+			BW_3000 = 3000
+		};
+
+		/* *************************************************************************************************
+			RETURNS THE NEXT POWER OF 2, IF IT ALREADY HAS BEEN A POWER OF 2 THE SAME VALUE IS RETURNED
 		************************************************************************************************* */
 		int to_power_of_two(const int& _in);
 
@@ -29,7 +38,7 @@ namespace Backend {
 			CREATE A FILTER KERNEL (IMPULSE RESPONSE) USED TO CONVOLVE THE SIGNAL WITH
 			(FILTER SPECIFIC FREQUENCIES, E.G. ANYTHING FROM 3000HZ UPWARDS)
 		************************************************************************************************* */
-		void fn_window_sinc(std::vector<std::complex<float>>& _impulse_response, const int& _sampling_rate, const int& _f_cutoff, const int& _f_transtion, const bool& _high_pass);
+		void fn_window_sinc(std::vector<std::complex<float>>& _impulse_response, const int& _sampling_rate, const int& _f_cutoff, const TRANSITION_BANDWITH& _f_transition, const bool& _high_pass);
 
 		/* *************************************************************************************************
 			STRUCT FOR PERFORMING A RADIX-2 FFT (REQUIRES SAMPLE COUNT POWER OF 2)
@@ -56,7 +65,7 @@ namespace Backend {
 			std::vector<std::vector<std::complex<float>>> overlap_add;
 			int cursor = 0;
 
-			int f_transition;
+			TRANSITION_BANDWITH f_transition;
 			int f_cutoff;
 			int sampling_rate;
 			bool high_pass;
@@ -69,7 +78,7 @@ namespace Backend {
 				GENERATE FILTER KERNEL AND PREPARING BUFFERS FOR OVERLAPP ADD (TIME-ALIASING)
 			************************************************************************************************* */
 			fir_filter() = default;
-			fir_filter(const int& _sampling_rate, const int& _f_cutoff, const int& _f_transition, const bool& _high_pass, const u32& _block_size)
+			fir_filter(const int& _sampling_rate, const int& _f_cutoff, const TRANSITION_BANDWITH& _f_transition, const bool& _high_pass, const u32& _block_size)
 				: sampling_rate(_sampling_rate), f_cutoff(_f_cutoff), f_transition(_f_transition), high_pass(_high_pass), B(_block_size)
 			{
 				fn_window_sinc(frequency_response, _sampling_rate, _f_cutoff, _f_transition, _high_pass);

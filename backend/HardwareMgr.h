@@ -75,9 +75,10 @@ namespace Backend {
 		static audio_settings GetAudioSettings();
 		
 		static void SetSamplingRate(int& _sampling_rate);
-		static void SetVolume(const float& _volume, const float& _lfe);
+		static void SetVolume(const float& _volume, const float& _lfe, const float& _base);
 		static void SetReverb(const float& _delay, const float& _decay);
-		static void SetAudioChannels(const bool& _high, const bool& _low);
+		static void SetAudioOutputEnable(const bool& _hf_output, const bool& _lfe_output);
+		static void SetFilterEnable(const bool& _dist_low_pass, const bool& _lfe_low_pass);
 
 		// Network backend
 		static void OpenNetwork(network_settings& _network_settings);

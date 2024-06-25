@@ -55,9 +55,10 @@ namespace Backend {
 		/* *************************************************************************************************
 			SETTERS FOR INFORMATION USED DURING EMULATION -> AUDIO THREAD AND CALLBACK
 		************************************************************************************************* */
-		void AudioMgr::SetVolume(const float& _volume, const float& _lfe) {
+		void AudioMgr::SetVolume(const float& _volume, const float& _lfe_volume, const float& _base_volume) {
 			audioInfo.master_volume.store(_volume);
-			audioInfo.lfe.store(_lfe);
+			audioInfo.lfe_volume.store(_lfe_volume);
+			audioInfo.base_volume.store(_base_volume);
 			audioInfo.settings_changed.store(true);
 		}
 
@@ -67,9 +68,15 @@ namespace Backend {
 			audioInfo.settings_changed.store(true);
 		}
 
-		void AudioMgr::SetAudioChannels(const bool& _high, const bool& _low) {
-			audioInfo.high_frequency.store(_high);
-			audioInfo.low_frequency.store(_low);
+		void AudioMgr::SetAudioOutputEnable(const bool& _hf_output, const bool& _lfe_output) {
+			audioInfo.hf_channel_output.store(_hf_output);
+			audioInfo.lfe_channel_output.store(_lfe_output);
+			audioInfo.settings_changed.store(true);
+		}
+
+		void AudioMgr::SetFilterEnable(const bool& _dist_low_pass, const bool& _lfe_low_pass) {
+			audioInfo.dist_low_pass_enable.store(_dist_low_pass);
+			audioInfo.lfe_low_pass_enable.store(_lfe_low_pass);
 			audioInfo.settings_changed.store(true);
 		}
 	}

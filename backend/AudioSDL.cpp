@@ -94,11 +94,14 @@ namespace Backend {
 			_audio_settings.sampling_rate_max = audioInfo.sampling_rate_max;
 
 			audioInfo.master_volume.store(_audio_settings.master_volume);
-			audioInfo.lfe.store(_audio_settings.lfe);
+			audioInfo.lfe_volume.store(_audio_settings.lfe_volume);
+			audioInfo.base_volume.store(_audio_settings.base_volume);
 			audioInfo.decay.store(_audio_settings.decay);
 			audioInfo.delay.store(_audio_settings.delay);
-			audioInfo.high_frequency.store(_audio_settings.high_frequencies);
-			audioInfo.low_frequency.store(_audio_settings.low_frequencies);
+			audioInfo.hf_channel_output.store(_audio_settings.hf_output_enable);
+			audioInfo.lfe_channel_output.store(_audio_settings.lfe_output_enable);
+			audioInfo.dist_low_pass_enable.store(_audio_settings.dist_low_pass_enable);
+			audioInfo.lfe_low_pass_enable.store(_audio_settings.lfe_low_pass_enable);
 			audioInfo.settings_changed.store(false);
 
 			// audio samples (audio api data)
@@ -233,9 +236,11 @@ namespace Backend {
 			reverb_buffer r_buffer;
 			//delay_buffer d_buffer;
 
-			int dist_cursor = 0;
 			std::vector<std::complex<float>> dist_buffer;
 			fir_filter low_pass_distance;
+
+			std::vector<std::vector<std::complex<float>>> lfe_buffer;
+			fir_filter low_pass_lfe;
 
 			std::vector<float> virt_angles;
 			std::vector<std::vector<std::complex<float>>> virt_samples;
@@ -247,13 +252,22 @@ namespace Backend {
 			audio_samples* samples;
 
 			int buff_size;
+
 			float decay;
 			float delay;
+
 			int sampling_rate;
-			float lfe;
-			float volume;
-			bool high_frequency = true;
-			bool low_frequency = true;
+
+			float base_volume;
+			float lfe_volume;
+			float master_volume;
+			
+			bool hf_channel_output = true;
+			bool lfe_channel_output = true;
+			
+			bool lfe_low_pass_enable = false;
+			bool dist_low_pass_enable = false;
+
 			int channels;
 			int virt_channels;
 
@@ -268,17 +282,28 @@ namespace Backend {
 				decay = _audio_info->decay.load();
 				delay = _audio_info->delay.load();
 				sampling_rate = _audio_info->sampling_rate;
-				lfe = _audio_info->lfe.load();
-				volume = _audio_info->master_volume.load();
+				lfe_volume = _audio_info->lfe_volume.load();
+				master_volume = _audio_info->master_volume.load();
 				buff_size = _audio_info->buff_size;
-				high_frequency = _audio_info->high_frequency.load();
-				low_frequency = _audio_info->low_frequency.load();
+				hf_channel_output = _audio_info->hf_channel_output.load();
+				lfe_channel_output = _audio_info->lfe_channel_output.load();
 				channels = _audio_info->channels;
+				base_volume = _audio_info->base_volume.load();
+				dist_low_pass_enable = _audio_info->dist_low_pass_enable.load();
+				lfe_low_pass_enable = _audio_info->lfe_low_pass_enable.load();
+
 				virt_channels = _virt_audio_info->channels;
 
 				r_buffer = reverb_buffer((int)(delay * sampling_rate), decay);
-				low_pass_distance = fir_filter(sampling_rate, 3000, 750, false, buff_size);
+
+				low_pass_distance = fir_filter(sampling_rate, 3000, TRANSITION_BANDWITH::BW_750, false, buff_size);
 				dist_buffer = std::vector<std::complex<float>>(buff_size);
+
+				low_pass_lfe = fir_filter(sampling_rate, 100, TRANSITION_BANDWITH::BW_750, false, buff_size);
+				lfe_buffer = std::vector<std::vector<std::complex<float>>>(virt_channels);
+				for (auto& n : lfe_buffer) {
+					n = std::vector<std::complex<float>>(buff_size);
+				}
 
 				// determine required buffer sizes
 				virt_samples = std::vector<std::vector<std::complex<float>>>(virt_channels);
@@ -325,11 +350,14 @@ namespace Backend {
 			************************************************************************************************* */
 			void process() {
 				if (audio_info->settings_changed.load()) {
-					volume = audio_info->master_volume.load();
-					lfe = audio_info->lfe.load();
+					master_volume = audio_info->master_volume.load();
+					lfe_volume = audio_info->lfe_volume.load();
 					reset_reverb(audio_info->delay.load(), audio_info->decay.load());
-					high_frequency = audio_info->high_frequency.load();
-					low_frequency = audio_info->low_frequency.load();
+					hf_channel_output = audio_info->hf_channel_output.load();
+					lfe_channel_output = audio_info->lfe_channel_output.load();
+					base_volume = audio_info->base_volume.load();
+					dist_low_pass_enable = audio_info->dist_low_pass_enable.load();
+					lfe_low_pass_enable = audio_info->lfe_low_pass_enable.load();
 					audio_info->settings_changed.store(false);
 				}
 
@@ -355,21 +383,32 @@ namespace Backend {
 					}
 					virt_audio_info->apu_callback(virt_samples, num_samples, sampling_rate);
 
-					// low frequency
-					dist_buffer.assign(num_samples, std::complex<float>());
-					for (auto& n : virt_samples) {
-						std::transform(n.begin(), n.end(), dist_buffer.begin(), dist_buffer.begin(), [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs + rhs; });
+					// distance (reverberation)
+					if (dist_low_pass_enable) {
+						dist_buffer.assign(num_samples, std::complex<float>());
+						for (auto& n : virt_samples) {
+							std::transform(n.begin(), n.end(), dist_buffer.begin(), dist_buffer.begin(), [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs + rhs; });
+						}
+						low_pass_distance.apply(dist_buffer);
 					}
-					low_pass_distance.apply(dist_buffer);
+
+					// lfe lowpass
+					if (lfe_low_pass_enable) {
+						for (int i = 0; i < virt_channels; i++) {
+							lfe_buffer[i].resize(num_samples);
+							std::copy(virt_samples[i].begin(), virt_samples[i].end(), lfe_buffer[i].begin());
+							low_pass_lfe.apply(lfe_buffer[i]);
+						}
+					}
 
 					int offset = samples->write_cursor;
 					for (int i = 0; i < num_samples; i++) {
-						float reverb = r_buffer.next();
+						float reverb = dist_low_pass_enable ? r_buffer.next() : .0f;
 
-						for (int j = 0; j < virt_audio_info->channels; j++) {
-							float sample = (virt_samples[j][i].real() + reverb) * volume;
-							float hf_sample = (high_frequency ? sample : .0f);
-							float lfe_sample = (low_frequency ? sample * lfe : .0f);
+						for (int j = 0; j < virt_channels; j++) {
+							float sample = virt_samples[j][i].real() * base_volume + reverb;
+							float hf_sample = (hf_channel_output ? sample * master_volume : .0f);
+							float lfe_sample = (lfe_channel_output ? (lfe_low_pass_enable ? (lfe_buffer[j][i].real() * base_volume + reverb) : sample) * lfe_volume * master_volume : .0f);
 							(this->*func)(&samples->buffer[offset], hf_sample, virt_angles[j], lfe_sample);
 						}
 
