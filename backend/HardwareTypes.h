@@ -22,7 +22,7 @@ namespace Backend {
 	struct virtual_audio_information {
 		int channels = 0;
 		alignas(64) std::atomic<bool> audio_running = false;
-		std::function<void(std::vector<std::vector<std::complex<float>>>&, const int&, const int&)> apu_callback;
+		std::function<void(std::vector<std::complex<float>>&, const int&, const int&)> apu_callback;
 
 		constexpr virtual_audio_information& operator=(virtual_audio_information& _right) noexcept {
 			if (this != &_right) {

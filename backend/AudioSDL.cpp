@@ -44,7 +44,7 @@ namespace Backend {
 		}
 
 		/* *************************************************************************************************
-			CALLBACK AND THREAD FUNCTIONS FOR THE AUDIO THREAD AND SDL BACKEND 
+			CALLBACK AND THREAD FUNCTIONS FOR THE AUDIO THREAD AND SDL BACKEND
 			(GENERATE NEW SAMPLES STORED IN THE RING BUFFER, REQUEST NEW SAMPLES FOR THE RING BUFFER)
 		************************************************************************************************* */
 		void audio_callback(void* userdata, u8* _device_buffer, int _length);
@@ -226,7 +226,7 @@ namespace Backend {
 		};
 
 		/* *************************************************************************************************
-			SPEAKERS STRUCT THAT CONTAINS THE FUNCTIONALITY TO APPLY AUDIO EFFECTS TO A 
+			SPEAKERS STRUCT THAT CONTAINS THE FUNCTIONALITY TO APPLY AUDIO EFFECTS TO A
 			GIVEN SET OF SAMPLES AND OUTPUTTING THEM TO THE RING BUFFER FOR THE SDL CALLBACK
 		************************************************************************************************* */
 		struct speakers {
@@ -243,7 +243,7 @@ namespace Backend {
 			fir_filter low_pass_lfe;
 
 			std::vector<float> virt_angles;
-			std::vector<std::vector<std::complex<float>>> virt_samples;
+			std::vector<std::complex<float>> virt_samples;
 
 			SDL_AudioDeviceID* device;
 
@@ -261,10 +261,10 @@ namespace Backend {
 			float base_volume;
 			float lfe_volume;
 			float master_volume;
-			
+
 			bool hf_channel_output = true;
 			bool lfe_channel_output = true;
-			
+
 			bool lfe_low_pass_enable = false;
 			bool dist_low_pass_enable = false;
 
@@ -272,7 +272,7 @@ namespace Backend {
 			int virt_channels;
 
 			speakers() = delete;
-			speakers(audio_information* _audio_info, virtual_audio_information* _virt_audio_info, audio_samples* _samples){
+			speakers(audio_information* _audio_info, virtual_audio_information* _virt_audio_info, audio_samples* _samples) {
 				audio_info = _audio_info;
 				virt_audio_info = _virt_audio_info;
 				samples = _samples;
@@ -306,10 +306,7 @@ namespace Backend {
 				}
 
 				// determine required buffer sizes
-				virt_samples = std::vector<std::vector<std::complex<float>>>(virt_channels);
-				for (auto& n : virt_samples) {
-					n.resize(buff_size);
-				}
+				virt_samples = std::vector<std::complex<float>>(virt_channels * buff_size);
 
 				switch (audio_info->channels) {
 				case SOUND_7_1:
@@ -378,25 +375,29 @@ namespace Backend {
 					int reg_2_samples = reg_2_size / channels;
 					int num_samples = reg_1_samples + reg_2_samples;
 
-					for (auto& n : virt_samples) {
-						n.assign(num_samples, std::complex<float>());
-					}
+					virt_samples.assign(num_samples * virt_channels, std::complex<float>());
 					virt_audio_info->apu_callback(virt_samples, num_samples, sampling_rate);
 
 					// distance (reverberation)
 					if (dist_low_pass_enable) {
 						dist_buffer.assign(num_samples, std::complex<float>());
-						for (auto& n : virt_samples) {
-							std::transform(n.begin(), n.end(), dist_buffer.begin(), dist_buffer.begin(), [](std::complex<float>& lhs, std::complex<float>& rhs) { return lhs + rhs; });
+						for (int i = 0, j = 0; i < num_samples; j++) {
+							if (j == virt_channels) { j = 0; i++; }
+							dist_buffer[i] += virt_samples[i * virt_channels + j];
 						}
 						low_pass_distance.apply(dist_buffer);
 					}
 
 					// lfe lowpass
 					if (lfe_low_pass_enable) {
+						for (auto& n : lfe_buffer) {
+							n.resize(num_samples);
+						}
+
 						for (int i = 0; i < virt_channels; i++) {
-							lfe_buffer[i].resize(num_samples);
-							std::copy(virt_samples[i].begin(), virt_samples[i].end(), lfe_buffer[i].begin());
+							for (int j = 0; j < num_samples; j++) {
+								lfe_buffer[i][j] = virt_samples[j * virt_channels + i];
+							}
 							low_pass_lfe.apply(lfe_buffer[i]);
 						}
 					}
@@ -406,7 +407,7 @@ namespace Backend {
 						float reverb = dist_low_pass_enable ? r_buffer.next() : .0f;
 
 						for (int j = 0; j < virt_channels; j++) {
-							float sample = virt_samples[j][i].real() * base_volume + reverb;
+							float sample = virt_samples[i * virt_channels + j].real() * base_volume + reverb;
 							float hf_sample = (hf_channel_output ? sample * master_volume : .0f);
 							float lfe_sample = (lfe_channel_output ? (lfe_low_pass_enable ? (lfe_buffer[j][i].real() * base_volume + reverb) : sample) * lfe_volume * master_volume : .0f);
 							(this->*func)(&samples->buffer[offset], hf_sample, virt_angles[j], lfe_sample);
