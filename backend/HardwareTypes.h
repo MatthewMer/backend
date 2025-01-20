@@ -23,12 +23,14 @@ namespace Backend {
 		int channels = 0;
 		alignas(64) std::atomic<bool> audio_running = false;
 		std::function<void(std::vector<std::complex<float>>&, const int&, const int&)> apu_callback;
+		std::function<void(int const& _sampling_rate)> sr_update_callback;
 
 		constexpr virtual_audio_information& operator=(virtual_audio_information& _right) noexcept {
 			if (this != &_right) {
 				channels = _right.channels;
 				audio_running.store(_right.audio_running.load());
 				apu_callback = _right.apu_callback;
+				sr_update_callback = _right.sr_update_callback;
 			}
 			return *this;
 		}

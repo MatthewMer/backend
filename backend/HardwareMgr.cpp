@@ -284,7 +284,6 @@ namespace Backend {
 	void HardwareMgr::SetSamplingRate(int& _sampling_rate) {
 		audioSettings.sampling_rate = _sampling_rate;
 		audioMgr->SetSamplingRate(audioSettings);
-
 		_sampling_rate = audioSettings.sampling_rate;
 	}
 

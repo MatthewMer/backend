@@ -50,6 +50,10 @@ namespace Backend {
 		************************************************************************************************* */
 		void AudioMgr::SetSamplingRate(audio_settings& _audio_settings) {
 			InitAudioBackend(_audio_settings, true);
+			// update sampling rate for application
+			if (virtAudioInfo.sr_update_callback) {
+				virtAudioInfo.sr_update_callback(audioInfo.sampling_rate);
+			}
 		}
 
 		/* *************************************************************************************************
