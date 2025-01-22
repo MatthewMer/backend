@@ -376,7 +376,7 @@ namespace Backend {
 					int num_samples = reg_1_samples + reg_2_samples;
 
 					virt_samples.assign(num_samples * virt_channels, std::complex<float>());
-					virt_audio_info->apu_callback(virt_samples, num_samples, sampling_rate);
+					virt_audio_info->apu_callback(virt_samples, num_samples);
 
 					// distance (reverberation)
 					if (dist_low_pass_enable) {
